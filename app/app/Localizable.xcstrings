@@ -1,0 +1,142 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "app.subtitle" : {
+      "comment" : "Short description shown below the main title on the home screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build and manage your shopping lists in the language you prefer."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twórz i zarządzaj listami zakupów w wybranym przez siebie języku."
+          }
+        }
+      }
+    },
+    "app.title" : {
+      "comment" : "Main title on the home screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shopping List"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista zakupów"
+          }
+        }
+      }
+    },
+    "language.english" : {
+      "comment" : "Label for English language option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angielski"
+          }
+        }
+      }
+    },
+    "language.polish" : {
+      "comment" : "Label for Polish language option.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polish"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polski"
+          }
+        }
+      }
+    },
+    "language.section.description" : {
+      "comment" : "Helper text under the language picker.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch between English and Polish at any time."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W każdej chwili możesz przełączyć aplikację między angielskim i polskim."
+          }
+        }
+      }
+    },
+    "language.section.title" : {
+      "comment" : "Section title above the language picker.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Język"
+          }
+        }
+      }
+    },
+    "welcome.card.body" : {
+      "comment" : "Body text for the introductory card on the home screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start your next grocery plan with clear items, quick edits, and room to grow into shared lists."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaplanuj kolejne zakupy dzięki przejrzystym pozycjom, szybkim zmianom i gotowości na współdzielone listy."
+          }
+        }
+      }
+    },
+    "welcome.card.title" : {
+      "comment" : "Heading for the introductory card on the home screen.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready for your next trip to the store?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gotowy na kolejne zakupy?"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
