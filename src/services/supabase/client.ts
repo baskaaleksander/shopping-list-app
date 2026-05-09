@@ -18,8 +18,7 @@ export function getSupabaseClient() {
   const config = getSupabaseConfig();
 
   if (!config) {
-    supabaseConfigError =
-      'Supabase environment variables are missing. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to a local .env file.';
+    supabaseConfigError = 'common.errors.supabaseEnvMissing';
 
     return {
       client: null,

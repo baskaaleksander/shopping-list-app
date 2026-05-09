@@ -7,7 +7,7 @@ import { getSupabaseClient } from '../../services/supabase/client';
 type SessionStatus = 'loading' | 'signedOut' | 'signedIn';
 
 type SessionContextValue = {
-  configError: string | null;
+  configErrorKey: string | null;
   session: Session | null;
   signOut: () => Promise<void>;
   status: SessionStatus;
@@ -16,7 +16,7 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: PropsWithChildren) {
-  const [configError, setConfigError] = useState<string | null>(null);
+  const [configErrorKey, setConfigErrorKey] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<SessionStatus>('loading');
 
@@ -24,7 +24,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const { client, error } = getSupabaseClient();
 
     if (!client) {
-      setConfigError(error);
+      setConfigErrorKey(error);
       setSession(null);
       setStatus('signedOut');
       return;
@@ -37,7 +37,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         return;
       }
 
-      setConfigError(sessionError?.message ?? null);
+      setConfigErrorKey(sessionError ? 'common.errors.sessionLoad' : null);
       setSession(data.session ?? null);
       setStatus(data.session ? 'signedIn' : 'signedOut');
     });
@@ -61,7 +61,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const value = useMemo<SessionContextValue>(
     () => ({
-      configError,
+      configErrorKey,
       session,
       signOut: async () => {
         const { client } = getSupabaseClient();
@@ -74,7 +74,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       },
       status,
     }),
-    [configError, session, status],
+    [configErrorKey, session, status],
   );
 
   return (

@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react-native';
 
 import App from '../App';
-import { appStrings } from '../src/localization/messages';
+import { en } from '../src/localization/resources/en';
 
 describe('App', () => {
   it('renders the bootstrap navigation shell', () => {
     render(<App />);
 
-    expect(screen.getByText(appStrings.auth.title)).toBeTruthy();
-    expect(screen.getByText(appStrings.auth.primaryAction)).toBeTruthy();
+    expect(screen.getByText(en.auth.title)).toBeTruthy();
+    expect(screen.getByText(en.auth.primaryAction)).toBeTruthy();
   });
 });

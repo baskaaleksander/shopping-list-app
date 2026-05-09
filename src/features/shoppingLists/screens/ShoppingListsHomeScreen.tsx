@@ -1,14 +1,15 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { AppButton } from '../../../components/AppButton';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
-import { appStrings } from '../../../localization/messages';
 import { useSession } from '../../../app/providers/SessionProvider';
 import type { SessionUser } from '../../../types/auth';
 
 export function ShoppingListsHomeScreen() {
   const { session, signOut } = useSession();
+  const { t } = useTranslation();
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -20,14 +21,14 @@ export function ShoppingListsHomeScreen() {
     <Screen>
       <View style={styles.content}>
         <EmptyState
-          description={appStrings.shoppingLists.subtitle}
-          title={appStrings.shoppingLists.title}
+          description={t('shoppingLists.subtitle')}
+          title={t('shoppingLists.title')}
         />
         <Text style={styles.status}>
-          {user?.email ?? appStrings.shoppingLists.noEmail}
+          {user?.email ?? t('shoppingLists.noEmail')}
         </Text>
         <AppButton onPress={() => void signOut()}>
-          {appStrings.shoppingLists.signOutAction}
+          {t('shoppingLists.signOutAction')}
         </AppButton>
       </View>
     </Screen>

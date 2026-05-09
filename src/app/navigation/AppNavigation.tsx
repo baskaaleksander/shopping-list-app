@@ -1,26 +1,29 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 
 import { AppLoader } from '../../components/AppLoader';
 import { Screen } from '../../components/Screen';
 import { AuthWelcomeScreen } from '../../features/auth';
 import { ShoppingListsHomeScreen } from '../../features/shoppingLists';
-import { appStrings } from '../../localization/messages';
 import { useSession } from '../providers/SessionProvider';
 import type { RootStackParamList } from '../../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function LoadingScreen() {
+  const { t } = useTranslation();
+
   return (
     <Screen centered>
-      <AppLoader label={appStrings.shell.loadingSession} />
+      <AppLoader label={t('shell.loadingSession')} />
     </Screen>
   );
 }
 
 export function AppNavigation() {
   const { session, status } = useSession();
+  const { t } = useTranslation();
 
   if (status === 'loading') {
     return <LoadingScreen />;
@@ -33,13 +36,13 @@ export function AppNavigation() {
           <Stack.Screen
             component={ShoppingListsHomeScreen}
             name="ShoppingListsHome"
-            options={{ title: appStrings.navigation.shoppingListsHomeTitle }}
+            options={{ title: t('navigation.shoppingListsHomeTitle') }}
           />
         ) : (
           <Stack.Screen
             component={AuthWelcomeScreen}
             name="AuthWelcome"
-            options={{ title: appStrings.navigation.authWelcomeTitle }}
+            options={{ title: t('navigation.authWelcomeTitle') }}
           />
         )}
       </Stack.Navigator>
