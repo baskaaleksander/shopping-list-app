@@ -1,17 +1,22 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { AuthWelcomeScreen } from '../../features/auth/screens/AuthWelcomeScreen';
-import { ShoppingListsHomeScreen } from '../../features/shoppingLists/screens/ShoppingListsHomeScreen';
-import { appStrings } from '../../localization/messages';
+import { AppLoader } from '../../components/AppLoader';
 import { Screen } from '../../components/Screen';
+import { AuthWelcomeScreen } from '../../features/auth';
+import { ShoppingListsHomeScreen } from '../../features/shoppingLists';
+import { appStrings } from '../../localization/messages';
 import { useSession } from '../providers/SessionProvider';
 import type { RootStackParamList } from '../../types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function LoadingScreen() {
-  return <Screen centered>{appStrings.shell.loadingSession}</Screen>;
+  return (
+    <Screen centered>
+      <AppLoader label={appStrings.shell.loadingSession} />
+    </Screen>
+  );
 }
 
 export function AppNavigation() {

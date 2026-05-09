@@ -1,3 +1,1 @@
-export const shoppingListsFeature = {
-  name: 'shoppingLists',
-};
+export { ShoppingListsHomeScreen } from './screens/ShoppingListsHomeScreen';

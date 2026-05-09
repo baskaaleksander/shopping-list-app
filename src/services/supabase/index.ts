@@ -1,4 +1,2 @@
-export const supabaseEnvKeys = {
-  anonKey: 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
-  url: 'EXPO_PUBLIC_SUPABASE_URL',
-} as const;
+export { getSupabaseClient } from './client';
+export { getSupabaseConfig } from './env';

@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
+import type { AppDatabase } from '../../types/database';
 import { getSupabaseConfig } from './env';
 
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+let supabaseClient: ReturnType<typeof createClient<AppDatabase>> | null = null;
 let supabaseConfigError: string | null = null;
 
 export function getSupabaseClient() {
@@ -26,7 +27,7 @@ export function getSupabaseClient() {
     };
   }
 
-  supabaseClient = createClient(config.url, config.anonKey, {
+  supabaseClient = createClient<AppDatabase>(config.url, config.anonKey, {
     auth: {
       autoRefreshToken: true,
       detectSessionInUrl: false,
