@@ -79,13 +79,17 @@ export const pl = {
     deleteAction: 'Usuń listę',
     emptyDescription: 'Utwórz listę, aby uporządkować kolejne zakupy.',
     emptyTitle: 'Brak list zakupów',
+    loadFailedTitle: 'Listy zakupów są niedostępne',
+    loading: 'Wczytywanie list zakupów...',
     noEmail: 'Brak adresu e-mail zalogowanego użytkownika',
     progressLabel: 'Postęp',
+    progressValue: '{{completed}}/{{total}} ukończono',
     renameAction: 'Zmień nazwę listy',
     signOutAction: 'Wyloguj się',
     subtitle:
       'Uwierzytelniona nawigacja, providery i przywracanie sesji są gotowe do dalszej implementacji funkcji.',
     title: 'Szkielet list zakupów',
+    updatedLabel: 'Zaktualizowano {{date}}',
   },
   validation: {
     invalidEmail: 'Wpisz poprawny adres e-mail.',

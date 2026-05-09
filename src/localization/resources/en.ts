@@ -80,13 +80,17 @@ export const en = {
     emptyDescription:
       'Create a list to keep your next shopping trip organized.',
     emptyTitle: 'No shopping lists yet',
+    loadFailedTitle: 'Shopping lists are unavailable',
+    loading: 'Loading your shopping lists...',
     noEmail: 'Signed-in email unavailable',
     progressLabel: 'Progress',
+    progressValue: '{{completed}}/{{total}} completed',
     renameAction: 'Rename list',
     signOutAction: 'Sign out',
     subtitle:
       'Authenticated navigation, providers, and session restore are ready for feature implementation.',
     title: 'Shopping list shell',
+    updatedLabel: 'Updated {{date}}',
   },
   validation: {
     invalidEmail: 'Enter a valid email address.',
