@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Shopping List App",
+    "slug": "shopping-list-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "deploymentTarget": "15.0"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
