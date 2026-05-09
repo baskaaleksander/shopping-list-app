@@ -1,32 +1,86 @@
 export const en = {
   auth: {
+    emailLabel: 'Email',
+    guestHint: 'Sign in is required before any shopping data is available.',
     nextStep:
       'Authentication screens and form handling will connect to this guest shell in the next task.',
+    passwordLabel: 'Password',
     primaryAction: 'Sign in coming next',
+    signInAction: 'Sign in',
+    signInTitle: 'Sign in',
+    signUpAction: 'Create account',
+    signUpTitle: 'Create account',
     subtitle:
       'Private shopping lists stay behind the auth gate. Session bootstrap is already wired through Supabase.',
     title: 'Welcome back',
+    usernameLabel: 'Username',
   },
   common: {
+    actions: {
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      delete: 'Delete',
+      save: 'Save',
+    },
     errors: {
+      deleteFailed: 'The app could not delete the requested data.',
+      loadFailed: 'The app could not load data from Supabase.',
+      network: 'A network or server error interrupted the request.',
+      saveFailed: 'The app could not save your changes.',
       sessionLoad:
         'The app could not restore the current session from Supabase.',
       supabaseEnvMissing:
         'Supabase environment variables are missing. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to a local .env file.',
     },
+    feedback: {
+      changesSaved: 'Changes saved.',
+      itemAdded: 'Item added.',
+      itemDeleted: 'Item deleted.',
+      itemUpdated: 'Item updated.',
+      listCreated: 'List created.',
+      listDeleted: 'List deleted.',
+      listRenamed: 'List renamed.',
+    },
+  },
+  items: {
+    addAction: 'Add item',
+    completedLabel: 'Completed',
+    deleteAction: 'Delete item',
+    editAction: 'Edit item',
+    emptyDescription:
+      'Add your first item to start tracking shopping progress.',
+    emptyTitle: 'No items yet',
+    nameLabel: 'Item name',
+    quantityLabel: 'Quantity',
   },
   navigation: {
     authWelcomeTitle: 'Sign in',
+    listDetailTitle: 'List details',
     shoppingListsHomeTitle: 'Shopping lists',
   },
   shell: {
     loadingSession: 'Checking your local Supabase session...',
   },
   shoppingLists: {
+    createAction: 'Create list',
+    createTitle: 'New shopping list',
+    deleteAction: 'Delete list',
+    emptyDescription:
+      'Create a list to keep your next shopping trip organized.',
+    emptyTitle: 'No shopping lists yet',
     noEmail: 'Signed-in email unavailable',
+    progressLabel: 'Progress',
+    renameAction: 'Rename list',
     signOutAction: 'Sign out',
     subtitle:
       'Authenticated navigation, providers, and session restore are ready for feature implementation.',
     title: 'Shopping list shell',
+  },
+  validation: {
+    invalidEmail: 'Enter a valid email address.',
+    requiredItemName: 'Item name is required.',
+    requiredListName: 'List name is required.',
+    requiredUsername: 'Username is required.',
+    shortPassword: 'Password must be at least 6 characters long.',
   },
 } as const;
