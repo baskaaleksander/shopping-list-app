@@ -75,6 +75,8 @@ export const pl = {
   },
   shoppingLists: {
     createAction: 'Utwórz listę',
+    creating: 'Tworzenie listy...',
+    namePlaceholder: 'Zakupy na sobotę',
     createTitle: 'Nowa lista zakupów',
     deleteAction: 'Usuń listę',
     emptyDescription: 'Utwórz listę, aby uporządkować kolejne zakupy.',

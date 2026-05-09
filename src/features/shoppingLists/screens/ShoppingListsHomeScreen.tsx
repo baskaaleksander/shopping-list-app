@@ -1,16 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { AppLoader } from '../../../components/AppLoader';
 import { AppButton } from '../../../components/AppButton';
+import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
 import type { SessionUser } from '../../../types/auth';
 
-import { fetchShoppingLists } from '../api';
+import { createShoppingList, fetchShoppingLists } from '../api';
 
 function formatDate(date: string, language: string) {
   try {
@@ -25,6 +26,9 @@ function formatDate(date: string, language: string) {
 export function ShoppingListsHomeScreen() {
   const { session, signOut } = useSession();
   const { i18n, t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [draftName, setDraftName] = useState('');
+  const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -50,6 +54,37 @@ export function ShoppingListsHomeScreen() {
     queryKey: ['shopping-lists', user?.id],
   });
 
+  const createListMutation = useMutation({
+    mutationFn: async (name: string) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await createShoppingList({
+        name,
+        user_id: user.id,
+      });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onSuccess: (newList) => {
+      queryClient.setQueryData(
+        ['shopping-lists', user?.id],
+        (currentLists: typeof shoppingListsQuery.data) => {
+          const existingLists = currentLists ?? [];
+
+          return [newList, ...existingLists];
+        },
+      );
+      setDraftName('');
+      setCreateErrorKey(null);
+    },
+  });
+
   const queryErrorKey = useMemo(() => {
     if (!(shoppingListsQuery.error instanceof Error)) {
       return null;
@@ -57,6 +92,25 @@ export function ShoppingListsHomeScreen() {
 
     return shoppingListsQuery.error.message;
   }, [shoppingListsQuery.error]);
+
+  async function handleCreateList() {
+    const trimmedName = draftName.trim();
+
+    if (!trimmedName) {
+      setCreateErrorKey('validation.requiredListName');
+      return;
+    }
+
+    setCreateErrorKey(null);
+
+    try {
+      await createListMutation.mutateAsync(trimmedName);
+    } catch (error) {
+      setCreateErrorKey(
+        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      );
+    }
+  }
 
   if (shoppingListsQuery.isLoading) {
     return (
@@ -95,6 +149,25 @@ export function ShoppingListsHomeScreen() {
               description={t('shoppingLists.subtitle')}
               title={t('shoppingLists.title')}
             />
+            <View style={styles.form}>
+              <AppTextInput
+                label={t('shoppingLists.createTitle')}
+                onChangeText={setDraftName}
+                placeholder={t('shoppingLists.namePlaceholder')}
+                value={draftName}
+              />
+              {createErrorKey ? (
+                <Text style={styles.error}>{t(createErrorKey)}</Text>
+              ) : null}
+              <AppButton
+                disabled={createListMutation.isPending}
+                onPress={() => void handleCreateList()}
+              >
+                {createListMutation.isPending
+                  ? t('shoppingLists.creating')
+                  : t('shoppingLists.createAction')}
+              </AppButton>
+            </View>
             <Text style={styles.status}>
               {user?.email ?? t('shoppingLists.noEmail')}
             </Text>
@@ -146,6 +219,14 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontSize: 18,
     fontWeight: '700',
+  },
+  error: {
+    color: '#b91c1c',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  form: {
+    gap: 12,
   },
   stack: {
     gap: 16,

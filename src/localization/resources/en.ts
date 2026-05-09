@@ -75,6 +75,8 @@ export const en = {
   },
   shoppingLists: {
     createAction: 'Create list',
+    creating: 'Creating list...',
+    namePlaceholder: 'Groceries for Saturday',
     createTitle: 'New shopping list',
     deleteAction: 'Delete list',
     emptyDescription:
