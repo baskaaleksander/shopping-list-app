@@ -1,7 +1,16 @@
 export const en = {
   auth: {
     emailLabel: 'Email',
+    errors: {
+      emailTaken: 'An account already exists for that email address.',
+      failedLogin:
+        'The app could not sign you in with that email and password.',
+      failedRegistration: 'The app could not create your account.',
+      usernameTaken: 'That username is already in use.',
+    },
     guestHint: 'Sign in is required before any shopping data is available.',
+    loadingSignIn: 'Signing in...',
+    loadingSignUp: 'Creating account...',
     nextStep:
       'Authentication screens and form handling will connect to this guest shell in the next task.',
     passwordLabel: 'Password',
@@ -12,6 +21,8 @@ export const en = {
     signUpTitle: 'Create account',
     subtitle:
       'Private shopping lists stay behind the auth gate. Session bootstrap is already wired through Supabase.',
+    switchToSignIn: 'Already have an account? Sign in',
+    switchToSignUp: 'Need an account? Create one',
     title: 'Welcome back',
     usernameLabel: 'Username',
   },
@@ -54,8 +65,9 @@ export const en = {
     quantityLabel: 'Quantity',
   },
   navigation: {
-    authWelcomeTitle: 'Sign in',
     listDetailTitle: 'List details',
+    signInTitle: 'Sign in',
+    signUpTitle: 'Create account',
     shoppingListsHomeTitle: 'Shopping lists',
   },
   shell: {

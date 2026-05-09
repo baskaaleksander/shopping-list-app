@@ -1,8 +1,17 @@
 export const pl = {
   auth: {
     emailLabel: 'E-mail',
+    errors: {
+      emailTaken: 'Konto dla tego adresu e-mail już istnieje.',
+      failedLogin:
+        'Aplikacja nie mogła zalogować Cię tym adresem e-mail i hasłem.',
+      failedRegistration: 'Aplikacja nie mogła utworzyć konta.',
+      usernameTaken: 'Ta nazwa użytkownika jest już zajęta.',
+    },
     guestHint:
       'Logowanie jest wymagane, zanim jakiekolwiek dane zakupowe będą dostępne.',
+    loadingSignIn: 'Logowanie...',
+    loadingSignUp: 'Tworzenie konta...',
     nextStep:
       'Ekrany uwierzytelniania i obsługa formularzy zostaną podłączone do tego widoku w następnym zadaniu.',
     passwordLabel: 'Hasło',
@@ -13,6 +22,8 @@ export const pl = {
     signUpTitle: 'Utwórz konto',
     subtitle:
       'Prywatne listy zakupów pozostają za bramką logowania. Przywracanie sesji przez Supabase jest już podłączone.',
+    switchToSignIn: 'Masz już konto? Zaloguj się',
+    switchToSignUp: 'Potrzebujesz konta? Utwórz je',
     title: 'Witaj ponownie',
     usernameLabel: 'Nazwa użytkownika',
   },
@@ -54,8 +65,9 @@ export const pl = {
     quantityLabel: 'Ilość',
   },
   navigation: {
-    authWelcomeTitle: 'Logowanie',
     listDetailTitle: 'Szczegóły listy',
+    signInTitle: 'Logowanie',
+    signUpTitle: 'Utwórz konto',
     shoppingListsHomeTitle: 'Listy zakupów',
   },
   shell: {

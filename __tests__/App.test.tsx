@@ -7,7 +7,7 @@ describe('App', () => {
   it('renders the bootstrap navigation shell', () => {
     render(<App />);
 
-    expect(screen.getByText(en.auth.title)).toBeTruthy();
-    expect(screen.getByText(en.auth.primaryAction)).toBeTruthy();
+    expect(screen.getByText(en.auth.guestHint)).toBeTruthy();
+    expect(screen.getAllByText(en.auth.signInAction).length).toBeGreaterThan(0);
   });
 });

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AppLoader } from '../../components/AppLoader';
 import { Screen } from '../../components/Screen';
-import { AuthWelcomeScreen } from '../../features/auth';
+import { SignInScreen, SignUpScreen } from '../../features/auth';
 import { ShoppingListsHomeScreen } from '../../features/shoppingLists';
 import { useSession } from '../providers/SessionProvider';
 import type { RootStackParamList } from '../../types/navigation';
@@ -39,11 +39,18 @@ export function AppNavigation() {
             options={{ title: t('navigation.shoppingListsHomeTitle') }}
           />
         ) : (
-          <Stack.Screen
-            component={AuthWelcomeScreen}
-            name="AuthWelcome"
-            options={{ title: t('navigation.authWelcomeTitle') }}
-          />
+          <>
+            <Stack.Screen
+              component={SignInScreen}
+              name="SignIn"
+              options={{ title: t('navigation.signInTitle') }}
+            />
+            <Stack.Screen
+              component={SignUpScreen}
+              name="SignUp"
+              options={{ title: t('navigation.signUpTitle') }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

@@ -1,1 +1,2 @@
-export { AuthWelcomeScreen } from './screens/AuthWelcomeScreen';
+export { SignInScreen } from './screens/SignInScreen';
+export { SignUpScreen } from './screens/SignUpScreen';

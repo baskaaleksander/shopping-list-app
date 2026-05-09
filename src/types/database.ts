@@ -32,6 +32,15 @@ export type AppDatabase = {
           updated_at?: string;
           user_id?: string;
         };
+        Relationships: [
+          {
+            columns: ['list_id', 'user_id'];
+            foreignKeyName: 'items_list_owner_fkey';
+            isOneToOne: false;
+            referencedColumns: ['id', 'user_id'];
+            referencedRelation: 'shopping_lists';
+          },
+        ];
       };
       profiles: {
         Insert: {
@@ -52,6 +61,7 @@ export type AppDatabase = {
           updated_at?: string;
           username?: string;
         };
+        Relationships: [];
       };
       shopping_lists: {
         Insert: {
@@ -75,7 +85,12 @@ export type AppDatabase = {
           updated_at?: string;
           user_id?: string;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 };
