@@ -1,0 +1,6 @@
+# Local backend infrastructure is started through `npx supabase start`.
+# The Supabase CLI uses Docker Compose under the hood; this file exists as the
+# repository-level anchor for that workflow and to make the Docker dependency explicit.
+name: shopping-list-app-local
+
+services: {}
