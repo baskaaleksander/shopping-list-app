@@ -1,3 +1,3 @@
 import 'react-native-gesture-handler';
 
-export { default } from './src/bootstrap/App';
+export { default } from './src/app/App';

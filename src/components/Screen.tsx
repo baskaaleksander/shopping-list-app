@@ -1,11 +1,27 @@
 import type { PropsWithChildren } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export function Screen({ children }: PropsWithChildren) {
+type ScreenProps = PropsWithChildren<{
+  centered?: boolean;
+}>;
+
+export function Screen({ centered = false, children }: ScreenProps) {
+  if (typeof children === 'string') {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.content, centered && styles.centered]}>
+          <Text style={styles.text}>{children}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, centered && styles.centered]}>
+        {children}
+      </View>
     </SafeAreaView>
   );
 }
@@ -19,5 +35,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 24,
+  },
+  centered: {
+    justifyContent: 'center',
+  },
+  text: {
+    color: '#6b7280',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
