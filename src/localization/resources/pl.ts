@@ -45,12 +45,14 @@ export const pl = {
     },
     feedback: {
       changesSaved: 'Zmiany zapisane.',
+      errorTitle: 'Błąd',
       itemAdded: 'Produkt dodany.',
       itemDeleted: 'Produkt usunięty.',
       itemUpdated: 'Produkt zaktualizowany.',
       listCreated: 'Lista utworzona.',
       listDeleted: 'Lista usunięta.',
       listRenamed: 'Nazwa listy zmieniona.',
+      successTitle: 'Sukces',
     },
   },
   items: {

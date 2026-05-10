@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -26,11 +26,6 @@ import {
   fetchShoppingLists,
   renameShoppingList,
 } from '../api';
-
-type FeedbackState = {
-  key: string;
-  tone: 'error' | 'success';
-};
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShoppingListsHome'>;
 
@@ -62,7 +57,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   const [renameDraft, setRenameDraft] = useState('');
   const [renameErrorKey, setRenameErrorKey] = useState<string | null>(null);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -116,6 +110,10 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       );
       setDraftName('');
       setCreateErrorKey(null);
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.listCreated'),
+      );
     },
   });
 
@@ -154,10 +152,10 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       setEditingListId(null);
       setRenameDraft('');
       setRenameErrorKey(null);
-      setFeedback({
-        key: 'common.feedback.listRenamed',
-        tone: 'success',
-      });
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.listRenamed'),
+      );
     },
   });
 
@@ -185,21 +183,30 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       if (editingListId === deletedListId) {
         cancelRename();
       }
-      setFeedback({
-        key: 'common.feedback.listDeleted',
-        tone: 'success',
-      });
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.listDeleted'),
+      );
     },
-    onError: () => {
-      setFeedback({
-        key: 'common.errors.deleteFailed',
-        tone: 'error',
-      });
+    onError: (error) => {
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.deleteFailed'),
+      );
     },
     onSettled: () => {
       setDeletingListId(null);
     },
   });
+
+  useEffect(() => {
+    if (shoppingListsQuery.error) {
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.loadFailed'),
+      );
+    }
+  }, [shoppingListsQuery.error, t]);
 
   const queryErrorKey = useMemo(() => {
     if (!(shoppingListsQuery.error instanceof Error)) {
@@ -222,8 +229,9 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     try {
       await createListMutation.mutateAsync(trimmedName);
     } catch (error) {
-      setCreateErrorKey(
-        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
       );
     }
   }
@@ -232,7 +240,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     setEditingListId(list.id);
     setRenameDraft(list.name);
     setRenameErrorKey(null);
-    setFeedback(null);
   }
 
   function cancelRename() {
@@ -260,10 +267,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       setRenameErrorKey(
         error instanceof Error ? error.message : 'common.errors.saveFailed',
       );
-      setFeedback({
-        key: 'common.errors.saveFailed',
-        tone: 'error',
-      });
     }
   }
 
@@ -288,7 +291,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     );
   }
 
-  if (shoppingListsQuery.isLoading) {
+  if (shoppingListsQuery.isPending) {
     return (
       <Screen centered>
         <AppLoader label={t('shoppingLists.loading')} />
@@ -344,17 +347,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
                   : t('shoppingLists.createAction')}
               </AppButton>
             </View>
-            {feedback ? (
-              <Text
-                style={
-                  feedback.tone === 'error'
-                    ? styles.feedbackError
-                    : styles.feedbackSuccess
-                }
-              >
-                {t(feedback.key)}
-              </Text>
-            ) : null}
+
             <Text style={styles.status}>
               {user?.email ?? t('shoppingLists.noEmail')}
             </Text>
@@ -524,16 +517,6 @@ const styles = StyleSheet.create({
     color: '#fef2f2',
     fontSize: 14,
     fontWeight: '600',
-  },
-  feedbackError: {
-    color: '#b91c1c',
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  feedbackSuccess: {
-    color: '#166534',
-    fontSize: 14,
-    lineHeight: 22,
   },
   form: {
     gap: 12,

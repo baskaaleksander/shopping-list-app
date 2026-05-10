@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -102,6 +102,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       setDraftName('');
       setDraftQuantity('');
       setCreateErrorKey(null);
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.itemAdded'),
+      );
     },
   });
 
@@ -131,6 +135,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       return result.data;
     },
     onSuccess: (updatedItem) => {
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.itemUpdated'),
+      );
       queryClient.setQueryData(
         ['shopping-list-items', user?.id, route.params.listId],
         (currentItems: typeof itemsQuery.data) => {
@@ -145,6 +153,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       setEditName('');
       setEditQuantity('');
       setEditErrorKey(null);
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.itemUpdated'),
+      );
     },
   });
 
@@ -199,6 +211,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       }
 
       queryClient.setQueryData(context.queryKey, context.previousItems);
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.deleteFailed'),
+      );
     },
     onSuccess: (updatedItem) => {
       queryClient.setQueryData(
@@ -260,13 +276,26 @@ export function ShoppingListDetailScreen({ route }: Props) {
       if (editingItemId === deletedItemId) {
         cancelEditingItem();
       }
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.itemDeleted'),
+      );
     },
     onSettled: () => {
       setDeletingItemId(null);
     },
   });
 
-  if (itemsQuery.isLoading) {
+  useEffect(() => {
+    if (itemsQuery.error) {
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.loadFailed'),
+      );
+    }
+  }, [itemsQuery.error, t]);
+
+  if (itemsQuery.isPending) {
     return (
       <Screen centered>
         <AppLoader label={t('items.loading')} />
@@ -307,8 +336,9 @@ export function ShoppingListDetailScreen({ route }: Props) {
         quantity: parsedQuantity,
       });
     } catch (error) {
-      setCreateErrorKey(
-        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
       );
     }
   }
@@ -353,8 +383,9 @@ export function ShoppingListDetailScreen({ route }: Props) {
         quantity: parsedQuantity,
       });
     } catch (error) {
-      setEditErrorKey(
-        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
       );
     }
   }

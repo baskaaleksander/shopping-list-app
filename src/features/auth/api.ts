@@ -8,6 +8,14 @@ type AuthResult = {
 function mapAuthError(message: string, fallbackKey: string) {
   const normalizedMessage = message.toLowerCase();
 
+  if (
+    normalizedMessage.includes('network') ||
+    normalizedMessage.includes('fetch') ||
+    normalizedMessage.includes('failed to fetch')
+  ) {
+    return 'common.errors.network';
+  }
+
   if (normalizedMessage.includes('invalid login credentials')) {
     return 'auth.errors.failedLogin';
   }

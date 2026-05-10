@@ -45,12 +45,14 @@ export const en = {
     },
     feedback: {
       changesSaved: 'Changes saved.',
+      errorTitle: 'Error',
       itemAdded: 'Item added.',
       itemDeleted: 'Item deleted.',
       itemUpdated: 'Item updated.',
       listCreated: 'List created.',
       listDeleted: 'List deleted.',
       listRenamed: 'List renamed.',
+      successTitle: 'Success',
     },
   },
   items: {
