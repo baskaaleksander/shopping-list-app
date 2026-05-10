@@ -87,7 +87,10 @@ export const en = {
     noEmail: 'Signed-in email unavailable',
     progressLabel: 'Progress',
     progressValue: '{{completed}}/{{total}} completed',
+    renamePlaceholder: 'Updated shopping list name',
     renameAction: 'Rename list',
+    renameTitle: 'Rename list',
+    renaming: 'Saving name...',
     signOutAction: 'Sign out',
     subtitle:
       'Authenticated navigation, providers, and session restore are ready for feature implementation.',

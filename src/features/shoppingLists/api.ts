@@ -3,6 +3,7 @@ import type {
   ShoppingItem,
   ShoppingList,
   ShoppingListInsert,
+  ShoppingListUpdate,
 } from '../../types';
 
 type ShoppingListWithItemsRow = ShoppingList & {
@@ -95,6 +96,41 @@ export async function createShoppingList(
       completedCount: 0,
       itemCount: 0,
     },
+    errorKey: null,
+  };
+}
+
+export async function renameShoppingList(
+  listId: string,
+  userId: string,
+  input: Pick<ShoppingListUpdate, 'name'>,
+): Promise<ShoppingListResult<ShoppingList>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { data, error: updateError } = await client
+    .from('shopping_lists')
+    .update(input)
+    .eq('id', listId)
+    .eq('user_id', userId)
+    .select('id, user_id, name, created_at, updated_at')
+    .single();
+
+  if (updateError || !data) {
+    return {
+      data: null,
+      errorKey: 'common.errors.saveFailed',
+    };
+  }
+
+  return {
+    data,
     errorKey: null,
   };
 }

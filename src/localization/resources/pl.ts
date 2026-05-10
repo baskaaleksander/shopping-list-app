@@ -86,7 +86,10 @@ export const pl = {
     noEmail: 'Brak adresu e-mail zalogowanego użytkownika',
     progressLabel: 'Postęp',
     progressValue: '{{completed}}/{{total}} ukończono',
+    renamePlaceholder: 'Zaktualizowana nazwa listy zakupów',
     renameAction: 'Zmień nazwę listy',
+    renameTitle: 'Zmień nazwę listy',
+    renaming: 'Zapisywanie nazwy...',
     signOutAction: 'Wyloguj się',
     subtitle:
       'Uwierzytelniona nawigacja, providery i przywracanie sesji są gotowe do dalszej implementacji funkcji.',

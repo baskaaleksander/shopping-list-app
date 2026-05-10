@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
@@ -10,8 +10,26 @@ import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
 import type { SessionUser } from '../../../types/auth';
+import type { ShoppingListSummary } from '../api';
 
-import { createShoppingList, fetchShoppingLists } from '../api';
+import {
+  createShoppingList,
+  fetchShoppingLists,
+  renameShoppingList,
+} from '../api';
+
+type FeedbackState = {
+  key: string;
+  tone: 'error' | 'success';
+};
+
+function sortShoppingLists(lists: ShoppingListSummary[]) {
+  return [...lists].sort(
+    (left, right) =>
+      new Date(right.updated_at).getTime() -
+      new Date(left.updated_at).getTime(),
+  );
+}
 
 function formatDate(date: string, language: string) {
   try {
@@ -29,6 +47,10 @@ export function ShoppingListsHomeScreen() {
   const queryClient = useQueryClient();
   const [draftName, setDraftName] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+  const [renameErrorKey, setRenameErrorKey] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -77,11 +99,53 @@ export function ShoppingListsHomeScreen() {
         (currentLists: typeof shoppingListsQuery.data) => {
           const existingLists = currentLists ?? [];
 
-          return [newList, ...existingLists];
+          return sortShoppingLists([newList, ...existingLists]);
         },
       );
       setDraftName('');
       setCreateErrorKey(null);
+    },
+  });
+
+  const renameListMutation = useMutation({
+    mutationFn: async ({ listId, name }: { listId: string; name: string }) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await renameShoppingList(listId, user.id, { name });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onSuccess: (updatedList) => {
+      queryClient.setQueryData(
+        ['shopping-lists', user?.id],
+        (currentLists: typeof shoppingListsQuery.data) => {
+          const existingLists = currentLists ?? [];
+
+          return sortShoppingLists(
+            existingLists.map((list) =>
+              list.id === updatedList.id
+                ? {
+                    ...list,
+                    ...updatedList,
+                  }
+                : list,
+            ),
+          );
+        },
+      );
+      setEditingListId(null);
+      setRenameDraft('');
+      setRenameErrorKey(null);
+      setFeedback({
+        key: 'common.feedback.listRenamed',
+        tone: 'success',
+      });
     },
   });
 
@@ -109,6 +173,45 @@ export function ShoppingListsHomeScreen() {
       setCreateErrorKey(
         error instanceof Error ? error.message : 'common.errors.saveFailed',
       );
+    }
+  }
+
+  function startRename(list: ShoppingListSummary) {
+    setEditingListId(list.id);
+    setRenameDraft(list.name);
+    setRenameErrorKey(null);
+    setFeedback(null);
+  }
+
+  function cancelRename() {
+    setEditingListId(null);
+    setRenameDraft('');
+    setRenameErrorKey(null);
+  }
+
+  async function handleRenameList(listId: string) {
+    const trimmedName = renameDraft.trim();
+
+    if (!trimmedName) {
+      setRenameErrorKey('validation.requiredListName');
+      return;
+    }
+
+    setRenameErrorKey(null);
+
+    try {
+      await renameListMutation.mutateAsync({
+        listId,
+        name: trimmedName,
+      });
+    } catch (error) {
+      setRenameErrorKey(
+        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      );
+      setFeedback({
+        key: 'common.errors.saveFailed',
+        tone: 'error',
+      });
     }
   }
 
@@ -168,6 +271,17 @@ export function ShoppingListsHomeScreen() {
                   : t('shoppingLists.createAction')}
               </AppButton>
             </View>
+            {feedback ? (
+              <Text
+                style={
+                  feedback.tone === 'error'
+                    ? styles.feedbackError
+                    : styles.feedbackSuccess
+                }
+              >
+                {t(feedback.key)}
+              </Text>
+            ) : null}
             <Text style={styles.status}>
               {user?.email ?? t('shoppingLists.noEmail')}
             </Text>
@@ -178,18 +292,76 @@ export function ShoppingListsHomeScreen() {
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.name}</Text>
-            <Text style={styles.cardMeta}>
-              {t('shoppingLists.updatedLabel', {
-                date: formatDate(item.updated_at, i18n.language),
-              })}
-            </Text>
-            <Text style={styles.cardMeta}>
-              {t('shoppingLists.progressValue', {
-                completed: item.completedCount,
-                total: item.itemCount,
-              })}
-            </Text>
+            {editingListId === item.id ? (
+              <View style={styles.form}>
+                <AppTextInput
+                  label={t('shoppingLists.renameTitle')}
+                  onChangeText={setRenameDraft}
+                  placeholder={t('shoppingLists.renamePlaceholder')}
+                  value={renameDraft}
+                />
+                {renameErrorKey ? (
+                  <Text style={styles.error}>{t(renameErrorKey)}</Text>
+                ) : null}
+                <View style={styles.actionRow}>
+                  <Pressable
+                    onPress={() => void handleRenameList(item.id)}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.primaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.primaryActionText}>
+                      {renameListMutation.isPending
+                        ? t('shoppingLists.renaming')
+                        : t('common.actions.confirm')}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={cancelRename}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.secondaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.secondaryActionText}>
+                      {t('common.actions.cancel')}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardMeta}>
+                  {t('shoppingLists.updatedLabel', {
+                    date: formatDate(item.updated_at, i18n.language),
+                  })}
+                </Text>
+                <Text style={styles.cardMeta}>
+                  {t('shoppingLists.progressValue', {
+                    completed: item.completedCount,
+                    total: item.itemCount,
+                  })}
+                </Text>
+                <View style={styles.actionRow}>
+                  <Pressable
+                    onPress={() => startRename(item)}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.secondaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.secondaryActionText}>
+                      {t('shoppingLists.renameAction')}
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
           </View>
         )}
       />
@@ -220,13 +392,55 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  actionButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    flex: 1,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  actionPressed: {
+    opacity: 0.85,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   error: {
     color: '#b91c1c',
     fontSize: 14,
     lineHeight: 22,
   },
+  feedbackError: {
+    color: '#b91c1c',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  feedbackSuccess: {
+    color: '#166534',
+    fontSize: 14,
+    lineHeight: 22,
+  },
   form: {
     gap: 12,
+  },
+  primaryAction: {
+    backgroundColor: '#111827',
+  },
+  primaryActionText: {
+    color: '#f9fafb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  secondaryAction: {
+    backgroundColor: '#e5e7eb',
+  },
+  secondaryActionText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '600',
   },
   stack: {
     gap: 16,
