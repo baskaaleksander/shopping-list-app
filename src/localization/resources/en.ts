@@ -56,8 +56,11 @@ export const en = {
   items: {
     addAction: 'Add item',
     completedLabel: 'Completed',
+    confirmDeleteMessage: 'Delete "{{name}}" from this list?',
+    confirmDeleteTitle: 'Delete this item?',
     creating: 'Adding item...',
     defaultQuantityHint: 'Quantity defaults to 1 when left blank.',
+    deleting: 'Deleting item...',
     deleteAction: 'Delete item',
     editAction: 'Edit item',
     emptyDescription:

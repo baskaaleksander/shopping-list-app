@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +21,7 @@ import type { RootStackParamList, SessionUser } from '../../../types';
 
 import {
   createShoppingItem,
+  deleteShoppingItem,
   fetchShoppingListItems,
   updateShoppingItem,
 } from '../api';
@@ -31,6 +39,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
   const [editName, setEditName] = useState('');
   const [editQuantity, setEditQuantity] = useState('');
   const [editErrorKey, setEditErrorKey] = useState<string | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -205,6 +214,58 @@ export function ShoppingListDetailScreen({ route }: Props) {
     },
   });
 
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      if (!user?.id) {
+        throw new Error('common.errors.deleteFailed');
+      }
+
+      const result = await deleteShoppingItem(itemId, user.id);
+
+      if (result.errorKey) {
+        throw new Error(result.errorKey);
+      }
+    },
+    onMutate: async (itemId) => {
+      const queryKey = [
+        'shopping-list-items',
+        user?.id,
+        route.params.listId,
+      ] as const;
+
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousItems =
+        queryClient.getQueryData<typeof itemsQuery.data>(queryKey);
+
+      queryClient.setQueryData(
+        queryKey,
+        (currentItems: typeof itemsQuery.data) => {
+          const existingItems = currentItems ?? [];
+
+          return existingItems.filter((item) => item.id !== itemId);
+        },
+      );
+
+      return { itemId, previousItems, queryKey };
+    },
+    onError: (_error, _variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      queryClient.setQueryData(context.queryKey, context.previousItems);
+    },
+    onSuccess: (_data, deletedItemId) => {
+      if (editingItemId === deletedItemId) {
+        cancelEditingItem();
+      }
+    },
+    onSettled: () => {
+      setDeletingItemId(null);
+    },
+  });
+
   if (itemsQuery.isLoading) {
     return (
       <Screen centered>
@@ -303,6 +364,27 @@ export function ShoppingListDetailScreen({ route }: Props) {
       completed,
       itemId,
     });
+  }
+
+  function confirmDeleteItem(itemId: string, itemName: string) {
+    Alert.alert(
+      t('items.confirmDeleteTitle'),
+      t('items.confirmDeleteMessage', { name: itemName }),
+      [
+        {
+          style: 'cancel',
+          text: t('common.actions.cancel'),
+        },
+        {
+          onPress: () => {
+            setDeletingItemId(itemId);
+            deleteItemMutation.mutate(itemId);
+          },
+          style: 'destructive',
+          text: t('items.deleteAction'),
+        },
+      ],
+    );
   }
 
   return (
@@ -475,6 +557,19 @@ export function ShoppingListDetailScreen({ route }: Props) {
                     {t('items.editAction')}
                   </Text>
                 </Pressable>
+                <Pressable
+                  onPress={() => confirmDeleteItem(item.id, item.name)}
+                  style={({ pressed }) => [
+                    styles.linkDeleteButton,
+                    pressed ? styles.actionPressed : null,
+                  ]}
+                >
+                  <Text style={styles.linkDeleteButtonText}>
+                    {deleteItemMutation.isPending && deletingItemId === item.id
+                      ? t('items.deleting')
+                      : t('items.deleteAction')}
+                  </Text>
+                </Pressable>
               </>
             )}
           </View>
@@ -565,6 +660,15 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  linkDeleteButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  linkDeleteButtonText: {
+    color: '#b91c1c',
     fontSize: 14,
     fontWeight: '600',
   },

@@ -114,3 +114,35 @@ export async function updateShoppingItem(
     errorKey: null,
   };
 }
+
+export async function deleteShoppingItem(
+  itemId: string,
+  userId: string,
+): Promise<ItemResult<null>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { error: deleteError } = await client
+    .from('items')
+    .delete()
+    .eq('id', itemId)
+    .eq('user_id', userId);
+
+  if (deleteError) {
+    return {
+      data: null,
+      errorKey: 'common.errors.deleteFailed',
+    };
+  }
+
+  return {
+    data: null,
+    errorKey: null,
+  };
+}

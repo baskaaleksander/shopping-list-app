@@ -56,9 +56,12 @@ export const pl = {
   items: {
     addAction: 'Dodaj produkt',
     completedLabel: 'Ukończono',
+    confirmDeleteMessage: 'Usunąć „{{name}}” z tej listy?',
+    confirmDeleteTitle: 'Usunąć ten produkt?',
     creating: 'Dodawanie produktu...',
     defaultQuantityHint:
       'Jeśli pole ilości pozostanie puste, zostanie użyta wartość 1.',
+    deleting: 'Usuwanie produktu...',
     deleteAction: 'Usuń produkt',
     editAction: 'Edytuj produkt',
     emptyDescription:
