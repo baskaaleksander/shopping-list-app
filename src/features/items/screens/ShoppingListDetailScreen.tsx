@@ -10,6 +10,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import Feather from '@expo/vector-icons/Feather';
 
 import { AppLoader } from '../../../components/AppLoader';
 import { AppButton } from '../../../components/AppButton';
@@ -35,11 +36,6 @@ export function ShoppingListDetailScreen({ route }: Props) {
   const [draftName, setDraftName] = useState('');
   const [draftQuantity, setDraftQuantity] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editQuantity, setEditQuantity] = useState('');
-  const [editErrorKey, setEditErrorKey] = useState<string | null>(null);
-  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -135,10 +131,6 @@ export function ShoppingListDetailScreen({ route }: Props) {
       return result.data;
     },
     onSuccess: (updatedItem) => {
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.itemUpdated'),
-      );
       queryClient.setQueryData(
         ['shopping-list-items', user?.id, route.params.listId],
         (currentItems: typeof itemsQuery.data) => {
@@ -149,10 +141,6 @@ export function ShoppingListDetailScreen({ route }: Props) {
           );
         },
       );
-      setEditingItemId(null);
-      setEditName('');
-      setEditQuantity('');
-      setEditErrorKey(null);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemUpdated'),
@@ -273,16 +261,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       queryClient.setQueryData(context.queryKey, context.previousItems);
     },
     onSuccess: (_data, deletedItemId) => {
-      if (editingItemId === deletedItemId) {
-        cancelEditingItem();
-      }
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemDeleted'),
       );
-    },
-    onSettled: () => {
-      setDeletingItemId(null);
     },
   });
 
@@ -343,44 +325,26 @@ export function ShoppingListDetailScreen({ route }: Props) {
     }
   }
 
-  function startEditingItem(itemId: string, name: string, quantity: number) {
-    setEditingItemId(itemId);
-    setEditName(name);
-    setEditQuantity(String(quantity));
-    setEditErrorKey(null);
-  }
-
-  function cancelEditingItem() {
-    setEditingItemId(null);
-    setEditName('');
-    setEditQuantity('');
-    setEditErrorKey(null);
-  }
-
-  async function handleUpdateItem(itemId: string) {
-    const trimmedName = editName.trim();
+  async function handleUpdateItem(
+    itemId: string,
+    newName: string = '',
+    quantity: number,
+  ) {
+    const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      setEditErrorKey('validation.requiredItemName');
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('validation.requiredItemName'),
+      );
       return;
     }
-
-    const parsedQuantity = editQuantity.trim()
-      ? Number.parseInt(editQuantity.trim(), 10)
-      : 1;
-
-    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
-      setEditErrorKey('validation.invalidQuantity');
-      return;
-    }
-
-    setEditErrorKey(null);
 
     try {
       await updateItemMutation.mutateAsync({
         itemId,
         name: trimmedName,
-        quantity: parsedQuantity,
+        quantity,
       });
     } catch (error) {
       Alert.alert(
@@ -388,6 +352,25 @@ export function ShoppingListDetailScreen({ route }: Props) {
         t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
       );
     }
+  }
+
+  function startEditingItem(itemId: string, name: string, quantity: number) {
+    Alert.prompt(
+      t('items.editAction'),
+      '',
+      [
+        {
+          text: t('common.actions.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.actions.confirm'),
+          onPress: (text?: string) => handleUpdateItem(itemId, text, quantity),
+        },
+      ],
+      'plain-text',
+      name,
+    );
   }
 
   function toggleItemCompletion(itemId: string, completed: boolean) {
@@ -400,7 +383,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
   function confirmDeleteItem(itemId: string, itemName: string) {
     Alert.alert(
       t('items.confirmDeleteTitle'),
-      t('items.confirmDeleteMessage', { name: itemName }),
+      `${t('items.confirmDeleteMessage', { name: itemName })}\n\n${t('shoppingLists.actionCannotBeUndone')}`,
       [
         {
           style: 'cancel',
@@ -408,7 +391,6 @@ export function ShoppingListDetailScreen({ route }: Props) {
         },
         {
           onPress: () => {
-            setDeletingItemId(itemId);
             deleteItemMutation.mutate(itemId);
           },
           style: 'destructive',
@@ -478,56 +460,8 @@ export function ShoppingListDetailScreen({ route }: Props) {
           <View
             style={[styles.card, item.completed ? styles.completedCard : null]}
           >
-            {editingItemId === item.id ? (
-              <View style={styles.formStack}>
-                <Text style={styles.formTitle}>{t('items.editAction')}</Text>
-                <AppTextInput
-                  label={t('items.nameLabel')}
-                  onChangeText={setEditName}
-                  placeholder={t('items.namePlaceholder')}
-                  value={editName}
-                />
-                <AppTextInput
-                  keyboardType="number-pad"
-                  label={t('items.quantityLabel')}
-                  onChangeText={setEditQuantity}
-                  placeholder={t('items.quantityPlaceholder')}
-                  value={editQuantity}
-                />
-                {editErrorKey ? (
-                  <Text style={styles.error}>{t(editErrorKey)}</Text>
-                ) : null}
-                <View style={styles.actionRow}>
-                  <Pressable
-                    onPress={() => void handleUpdateItem(item.id)}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.primaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.primaryActionText}>
-                      {updateItemMutation.isPending
-                        ? t('items.updating')
-                        : t('common.actions.save')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={cancelEditingItem}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.secondaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.secondaryActionText}>
-                      {t('common.actions.cancel')}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            ) : (
-              <>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardTitleContainer}>
                 <Text
                   style={[
                     styles.title,
@@ -539,70 +473,66 @@ export function ShoppingListDetailScreen({ route }: Props) {
                 <Text style={styles.meta}>
                   {t('items.quantityValue', { count: item.quantity })}
                 </Text>
-                <Text
-                  style={[
-                    styles.status,
-                    item.completed ? styles.completedStatus : null,
-                  ]}
-                >
-                  {item.completed
-                    ? t('items.completedLabel')
-                    : t('items.pendingLabel')}
-                </Text>
-                <View style={styles.actionRow}>
-                  <Pressable
-                    onPress={() =>
-                      toggleItemCompletion(item.id, !item.completed)
-                    }
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      item.completed
-                        ? styles.secondaryAction
-                        : styles.primaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text
-                      style={
-                        item.completed
-                          ? styles.secondaryActionText
-                          : styles.primaryActionText
-                      }
-                    >
-                      {item.completed
-                        ? t('items.markPendingAction')
-                        : t('items.markCompletedAction')}
-                    </Text>
-                  </Pressable>
-                </View>
+              </View>
+              <View style={styles.cardActions}>
                 <Pressable
                   onPress={() =>
                     startEditingItem(item.id, item.name, item.quantity)
                   }
                   style={({ pressed }) => [
-                    styles.linkButton,
+                    styles.iconButton,
                     pressed ? styles.actionPressed : null,
                   ]}
+                  accessibilityLabel={t('items.editAction')}
                 >
-                  <Text style={styles.linkButtonText}>
-                    {t('items.editAction')}
-                  </Text>
+                  <Feather name="edit-2" size={20} color="#374151" />
                 </Pressable>
                 <Pressable
                   onPress={() => confirmDeleteItem(item.id, item.name)}
                   style={({ pressed }) => [
-                    styles.linkDeleteButton,
+                    styles.iconButton,
                     pressed ? styles.actionPressed : null,
                   ]}
+                  accessibilityLabel={t('items.deleteAction')}
                 >
-                  <Text style={styles.linkDeleteButtonText}>
-                    {deleteItemMutation.isPending && deletingItemId === item.id
-                      ? t('items.deleting')
-                      : t('items.deleteAction')}
-                  </Text>
+                  <Feather name="trash-2" size={20} color="#b91c1c" />
                 </Pressable>
-              </>
-            )}
+              </View>
+            </View>
+            <Text
+              style={[
+                styles.status,
+                item.completed ? styles.completedStatus : null,
+              ]}
+            >
+              {item.completed
+                ? t('items.completedLabel')
+                : t('items.pendingLabel')}
+            </Text>
+            <View style={styles.actionRow}>
+              <Pressable
+                onPress={() => toggleItemCompletion(item.id, !item.completed)}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  item.completed
+                    ? styles.secondaryAction
+                    : styles.primaryAction,
+                  pressed ? styles.actionPressed : null,
+                ]}
+              >
+                <Text
+                  style={
+                    item.completed
+                      ? styles.secondaryActionText
+                      : styles.primaryActionText
+                  }
+                >
+                  {item.completed
+                    ? t('items.markPendingAction')
+                    : t('items.markCompletedAction')}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         )}
       />
@@ -618,6 +548,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     padding: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  cardTitleContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    padding: 4,
   },
   content: {
     gap: 12,
