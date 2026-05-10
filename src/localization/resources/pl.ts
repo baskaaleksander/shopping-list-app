@@ -71,6 +71,7 @@ export const pl = {
     quantityLabel: 'Ilość',
     quantityPlaceholder: '1',
     quantityValue: 'Ilość: {{count}}',
+    updating: 'Zapisywanie produktu...',
   },
   navigation: {
     listDetailTitle: 'Szczegóły listy',

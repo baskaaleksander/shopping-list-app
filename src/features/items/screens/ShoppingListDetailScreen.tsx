@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +12,11 @@ import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
 import type { RootStackParamList, SessionUser } from '../../../types';
 
-import { createShoppingItem, fetchShoppingListItems } from '../api';
+import {
+  createShoppingItem,
+  fetchShoppingListItems,
+  updateShoppingItem,
+} from '../api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShoppingListDetail'>;
 
@@ -23,6 +27,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
   const [draftName, setDraftName] = useState('');
   const [draftQuantity, setDraftQuantity] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editErrorKey, setEditErrorKey] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -88,6 +96,49 @@ export function ShoppingListDetailScreen({ route }: Props) {
     },
   });
 
+  const updateItemMutation = useMutation({
+    mutationFn: async ({
+      itemId,
+      name,
+      quantity,
+    }: {
+      itemId: string;
+      name: string;
+      quantity: number;
+    }) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await updateShoppingItem(itemId, user.id, {
+        name,
+        quantity,
+      });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onSuccess: (updatedItem) => {
+      queryClient.setQueryData(
+        ['shopping-list-items', user?.id, route.params.listId],
+        (currentItems: typeof itemsQuery.data) => {
+          const existingItems = currentItems ?? [];
+
+          return existingItems.map((item) =>
+            item.id === updatedItem.id ? updatedItem : item,
+          );
+        },
+      );
+      setEditingItemId(null);
+      setEditName('');
+      setEditQuantity('');
+      setEditErrorKey(null);
+    },
+  });
+
   if (itemsQuery.isLoading) {
     return (
       <Screen centered>
@@ -130,6 +181,52 @@ export function ShoppingListDetailScreen({ route }: Props) {
       });
     } catch (error) {
       setCreateErrorKey(
+        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      );
+    }
+  }
+
+  function startEditingItem(itemId: string, name: string, quantity: number) {
+    setEditingItemId(itemId);
+    setEditName(name);
+    setEditQuantity(String(quantity));
+    setEditErrorKey(null);
+  }
+
+  function cancelEditingItem() {
+    setEditingItemId(null);
+    setEditName('');
+    setEditQuantity('');
+    setEditErrorKey(null);
+  }
+
+  async function handleUpdateItem(itemId: string) {
+    const trimmedName = editName.trim();
+
+    if (!trimmedName) {
+      setEditErrorKey('validation.requiredItemName');
+      return;
+    }
+
+    const parsedQuantity = editQuantity.trim()
+      ? Number.parseInt(editQuantity.trim(), 10)
+      : 1;
+
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setEditErrorKey('validation.invalidQuantity');
+      return;
+    }
+
+    setEditErrorKey(null);
+
+    try {
+      await updateItemMutation.mutateAsync({
+        itemId,
+        name: trimmedName,
+        quantity: parsedQuantity,
+      });
+    } catch (error) {
+      setEditErrorKey(
         error instanceof Error ? error.message : 'common.errors.saveFailed',
       );
     }
@@ -195,27 +292,92 @@ export function ShoppingListDetailScreen({ route }: Props) {
           <View
             style={[styles.card, item.completed ? styles.completedCard : null]}
           >
-            <Text
-              style={[
-                styles.title,
-                item.completed ? styles.completedTitle : null,
-              ]}
-            >
-              {item.name}
-            </Text>
-            <Text style={styles.meta}>
-              {t('items.quantityValue', { count: item.quantity })}
-            </Text>
-            <Text
-              style={[
-                styles.status,
-                item.completed ? styles.completedStatus : null,
-              ]}
-            >
-              {item.completed
-                ? t('items.completedLabel')
-                : t('items.pendingLabel')}
-            </Text>
+            {editingItemId === item.id ? (
+              <View style={styles.formStack}>
+                <Text style={styles.formTitle}>{t('items.editAction')}</Text>
+                <AppTextInput
+                  label={t('items.nameLabel')}
+                  onChangeText={setEditName}
+                  placeholder={t('items.namePlaceholder')}
+                  value={editName}
+                />
+                <AppTextInput
+                  keyboardType="number-pad"
+                  label={t('items.quantityLabel')}
+                  onChangeText={setEditQuantity}
+                  placeholder={t('items.quantityPlaceholder')}
+                  value={editQuantity}
+                />
+                {editErrorKey ? (
+                  <Text style={styles.error}>{t(editErrorKey)}</Text>
+                ) : null}
+                <View style={styles.actionRow}>
+                  <Pressable
+                    onPress={() => void handleUpdateItem(item.id)}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.primaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.primaryActionText}>
+                      {updateItemMutation.isPending
+                        ? t('items.updating')
+                        : t('common.actions.save')}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={cancelEditingItem}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.secondaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.secondaryActionText}>
+                      {t('common.actions.cancel')}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <>
+                <Text
+                  style={[
+                    styles.title,
+                    item.completed ? styles.completedTitle : null,
+                  ]}
+                >
+                  {item.name}
+                </Text>
+                <Text style={styles.meta}>
+                  {t('items.quantityValue', { count: item.quantity })}
+                </Text>
+                <Text
+                  style={[
+                    styles.status,
+                    item.completed ? styles.completedStatus : null,
+                  ]}
+                >
+                  {item.completed
+                    ? t('items.completedLabel')
+                    : t('items.pendingLabel')}
+                </Text>
+                <Pressable
+                  onPress={() =>
+                    startEditingItem(item.id, item.name, item.quantity)
+                  }
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed ? styles.actionPressed : null,
+                  ]}
+                >
+                  <Text style={styles.linkButtonText}>
+                    {t('items.editAction')}
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </View>
         )}
       />
@@ -271,6 +433,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  formStack: {
+    gap: 12,
+  },
   headerStack: {
     gap: 12,
   },
@@ -278,6 +443,47 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontSize: 13,
     lineHeight: 20,
+  },
+  actionButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  actionPressed: {
+    opacity: 0.85,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  linkButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  linkButtonText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  primaryAction: {
+    backgroundColor: '#111827',
+  },
+  primaryActionText: {
+    color: '#f9fafb',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  secondaryAction: {
+    backgroundColor: '#e5e7eb',
+  },
+  secondaryActionText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '600',
   },
   status: {
     color: '#1f2937',

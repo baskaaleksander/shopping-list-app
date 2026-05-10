@@ -1,5 +1,9 @@
 import { getSupabaseClient } from '../../services/supabase';
-import type { ShoppingItem, ShoppingItemInsert } from '../../types';
+import type {
+  ShoppingItem,
+  ShoppingItemInsert,
+  ShoppingItemUpdate,
+} from '../../types';
 
 type ItemResult<TData> = {
   data: TData | null;
@@ -62,6 +66,43 @@ export async function createShoppingItem(
     .single();
 
   if (insertError || !data) {
+    return {
+      data: null,
+      errorKey: 'common.errors.saveFailed',
+    };
+  }
+
+  return {
+    data,
+    errorKey: null,
+  };
+}
+
+export async function updateShoppingItem(
+  itemId: string,
+  userId: string,
+  input: Pick<ShoppingItemUpdate, 'name' | 'quantity'>,
+): Promise<ItemResult<ShoppingItem>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { data, error: updateError } = await client
+    .from('items')
+    .update(input)
+    .eq('id', itemId)
+    .eq('user_id', userId)
+    .select(
+      'id, user_id, list_id, name, quantity, completed, created_at, updated_at',
+    )
+    .single();
+
+  if (updateError || !data) {
     return {
       data: null,
       errorKey: 'common.errors.saveFailed',

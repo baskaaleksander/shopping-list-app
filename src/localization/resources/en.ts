@@ -70,6 +70,7 @@ export const en = {
     quantityLabel: 'Quantity',
     quantityPlaceholder: '1',
     quantityValue: 'Quantity: {{count}}',
+    updating: 'Saving item...',
   },
   navigation: {
     listDetailTitle: 'List details',
