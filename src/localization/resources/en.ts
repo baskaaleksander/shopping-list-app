@@ -56,6 +56,8 @@ export const en = {
   items: {
     addAction: 'Add item',
     completedLabel: 'Completed',
+    creating: 'Adding item...',
+    defaultQuantityHint: 'Quantity defaults to 1 when left blank.',
     deleteAction: 'Delete item',
     editAction: 'Edit item',
     emptyDescription:
@@ -63,8 +65,10 @@ export const en = {
     emptyTitle: 'No items yet',
     loading: 'Loading items in this list...',
     nameLabel: 'Item name',
+    namePlaceholder: 'Milk',
     pendingLabel: 'Pending',
     quantityLabel: 'Quantity',
+    quantityPlaceholder: '1',
     quantityValue: 'Quantity: {{count}}',
   },
   navigation: {
@@ -107,6 +111,7 @@ export const en = {
   },
   validation: {
     invalidEmail: 'Enter a valid email address.',
+    invalidQuantity: 'Enter a quantity greater than 0.',
     requiredItemName: 'Item name is required.',
     requiredListName: 'List name is required.',
     requiredUsername: 'Username is required.',

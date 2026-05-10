@@ -1,7 +1,9 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import type { KeyboardTypeOptions } from 'react-native';
 
 type AppTextInputProps = {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: KeyboardTypeOptions;
   label?: string;
   onChangeText?: (value: string) => void;
   placeholder?: string;
@@ -11,6 +13,7 @@ type AppTextInputProps = {
 
 export function AppTextInput({
   autoCapitalize = 'sentences',
+  keyboardType,
   label,
   onChangeText,
   placeholder,
@@ -22,6 +25,7 @@ export function AppTextInput({
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"

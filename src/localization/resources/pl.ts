@@ -56,6 +56,9 @@ export const pl = {
   items: {
     addAction: 'Dodaj produkt',
     completedLabel: 'Ukończono',
+    creating: 'Dodawanie produktu...',
+    defaultQuantityHint:
+      'Jeśli pole ilości pozostanie puste, zostanie użyta wartość 1.',
     deleteAction: 'Usuń produkt',
     editAction: 'Edytuj produkt',
     emptyDescription:
@@ -63,8 +66,10 @@ export const pl = {
     emptyTitle: 'Brak produktów',
     loading: 'Wczytywanie produktów z tej listy...',
     nameLabel: 'Nazwa produktu',
+    namePlaceholder: 'Mleko',
     pendingLabel: 'Do kupienia',
     quantityLabel: 'Ilość',
+    quantityPlaceholder: '1',
     quantityValue: 'Ilość: {{count}}',
   },
   navigation: {
@@ -106,6 +111,7 @@ export const pl = {
   },
   validation: {
     invalidEmail: 'Wpisz poprawny adres e-mail.',
+    invalidQuantity: 'Podaj ilość większą od 0.',
     requiredItemName: 'Nazwa produktu jest wymagana.',
     requiredListName: 'Nazwa listy jest wymagana.',
     requiredUsername: 'Nazwa użytkownika jest wymagana.',

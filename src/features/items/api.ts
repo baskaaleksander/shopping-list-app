@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../../services/supabase';
-import type { ShoppingItem } from '../../types';
+import type { ShoppingItem, ShoppingItemInsert } from '../../types';
 
 type ItemResult<TData> = {
   data: TData | null;
@@ -37,6 +37,39 @@ export async function fetchShoppingListItems(
 
   return {
     data: data ?? [],
+    errorKey: null,
+  };
+}
+
+export async function createShoppingItem(
+  input: ShoppingItemInsert,
+): Promise<ItemResult<ShoppingItem>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { data, error: insertError } = await client
+    .from('items')
+    .insert([input])
+    .select(
+      'id, user_id, list_id, name, quantity, completed, created_at, updated_at',
+    )
+    .single();
+
+  if (insertError || !data) {
+    return {
+      data: null,
+      errorKey: 'common.errors.saveFailed',
+    };
+  }
+
+  return {
+    data,
     errorKey: null,
   };
 }

@@ -1,21 +1,28 @@
+import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import { AppLoader } from '../../../components/AppLoader';
+import { AppButton } from '../../../components/AppButton';
+import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
 import type { RootStackParamList, SessionUser } from '../../../types';
 
-import { fetchShoppingListItems } from '../api';
+import { createShoppingItem, fetchShoppingListItems } from '../api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShoppingListDetail'>;
 
 export function ShoppingListDetailScreen({ route }: Props) {
   const { session } = useSession();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [draftName, setDraftName] = useState('');
+  const [draftQuantity, setDraftQuantity] = useState('');
+  const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -41,6 +48,46 @@ export function ShoppingListDetailScreen({ route }: Props) {
     queryKey: ['shopping-list-items', user?.id, route.params.listId],
   });
 
+  const createItemMutation = useMutation({
+    mutationFn: async ({
+      name,
+      quantity,
+    }: {
+      name: string;
+      quantity: number;
+    }) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await createShoppingItem({
+        list_id: route.params.listId,
+        name,
+        quantity,
+        user_id: user.id,
+      });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onSuccess: (newItem) => {
+      queryClient.setQueryData(
+        ['shopping-list-items', user?.id, route.params.listId],
+        (currentItems: typeof itemsQuery.data) => {
+          const existingItems = currentItems ?? [];
+
+          return [...existingItems, newItem];
+        },
+      );
+      setDraftName('');
+      setDraftQuantity('');
+      setCreateErrorKey(null);
+    },
+  });
+
   if (itemsQuery.isLoading) {
     return (
       <Screen centered>
@@ -57,6 +104,37 @@ export function ShoppingListDetailScreen({ route }: Props) {
 
   const completedCount = items.filter((item) => item.completed).length;
 
+  async function handleCreateItem() {
+    const trimmedName = draftName.trim();
+
+    if (!trimmedName) {
+      setCreateErrorKey('validation.requiredItemName');
+      return;
+    }
+
+    const parsedQuantity = draftQuantity.trim()
+      ? Number.parseInt(draftQuantity.trim(), 10)
+      : 1;
+
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setCreateErrorKey('validation.invalidQuantity');
+      return;
+    }
+
+    setCreateErrorKey(null);
+
+    try {
+      await createItemMutation.mutateAsync({
+        name: trimmedName,
+        quantity: parsedQuantity,
+      });
+    } catch (error) {
+      setCreateErrorKey(
+        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      );
+    }
+  }
+
   return (
     <Screen>
       <FlatList
@@ -70,17 +148,47 @@ export function ShoppingListDetailScreen({ route }: Props) {
           />
         }
         ListHeaderComponent={
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryEyebrow}>
-              {t('shoppingLists.progressLabel')}
-            </Text>
-            <Text style={styles.summaryTitle}>{route.params.listName}</Text>
-            <Text style={styles.summaryValue}>
-              {t('shoppingLists.progressValue', {
-                completed: completedCount,
-                total: items.length,
-              })}
-            </Text>
+          <View style={styles.headerStack}>
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryEyebrow}>
+                {t('shoppingLists.progressLabel')}
+              </Text>
+              <Text style={styles.summaryTitle}>{route.params.listName}</Text>
+              <Text style={styles.summaryValue}>
+                {t('shoppingLists.progressValue', {
+                  completed: completedCount,
+                  total: items.length,
+                })}
+              </Text>
+            </View>
+            <View style={styles.formCard}>
+              <Text style={styles.formTitle}>{t('items.addAction')}</Text>
+              <AppTextInput
+                label={t('items.nameLabel')}
+                onChangeText={setDraftName}
+                placeholder={t('items.namePlaceholder')}
+                value={draftName}
+              />
+              <AppTextInput
+                keyboardType="number-pad"
+                label={t('items.quantityLabel')}
+                onChangeText={setDraftQuantity}
+                placeholder={t('items.quantityPlaceholder')}
+                value={draftQuantity}
+              />
+              <Text style={styles.hint}>{t('items.defaultQuantityHint')}</Text>
+              {createErrorKey ? (
+                <Text style={styles.error}>{t(createErrorKey)}</Text>
+              ) : null}
+              <AppButton
+                disabled={createItemMutation.isPending}
+                onPress={() => void handleCreateItem()}
+              >
+                {createItemMutation.isPending
+                  ? t('items.creating')
+                  : t('items.addAction')}
+              </AppButton>
+            </View>
           </View>
         }
         renderItem={({ item }) => (
@@ -143,6 +251,32 @@ const styles = StyleSheet.create({
   meta: {
     color: '#6b7280',
     fontSize: 14,
+    lineHeight: 20,
+  },
+  error: {
+    color: '#b91c1c',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  formCard: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e5e7eb',
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 12,
+    padding: 18,
+  },
+  formTitle: {
+    color: '#111827',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  headerStack: {
+    gap: 12,
+  },
+  hint: {
+    color: '#6b7280',
+    fontSize: 13,
     lineHeight: 20,
   },
   status: {
