@@ -19,6 +19,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-localization"]
+    "plugins": ["expo-localization", "expo-asset", "expo-font"]
   }
 }

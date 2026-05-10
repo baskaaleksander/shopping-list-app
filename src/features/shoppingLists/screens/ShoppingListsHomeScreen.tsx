@@ -10,6 +10,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import Feather from '@expo/vector-icons/Feather';
 
 import { AppLoader } from '../../../components/AppLoader';
 import { AppButton } from '../../../components/AppButton';
@@ -53,10 +54,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
   const [draftName, setDraftName] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
-  const [editingListId, setEditingListId] = useState<string | null>(null);
-  const [renameDraft, setRenameDraft] = useState('');
-  const [renameErrorKey, setRenameErrorKey] = useState<string | null>(null);
-  const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -149,9 +146,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           );
         },
       );
-      setEditingListId(null);
-      setRenameDraft('');
-      setRenameErrorKey(null);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listRenamed'),
@@ -180,9 +174,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           return existingLists.filter((list) => list.id !== deletedListId);
         },
       );
-      if (editingListId === deletedListId) {
-        cancelRename();
-      }
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listDeleted'),
@@ -193,9 +184,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         t('common.feedback.errorTitle'),
         t('common.errors.deleteFailed'),
       );
-    },
-    onSettled: () => {
-      setDeletingListId(null);
     },
   });
 
@@ -236,27 +224,16 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     }
   }
 
-  function startRename(list: ShoppingListSummary) {
-    setEditingListId(list.id);
-    setRenameDraft(list.name);
-    setRenameErrorKey(null);
-  }
-
-  function cancelRename() {
-    setEditingListId(null);
-    setRenameDraft('');
-    setRenameErrorKey(null);
-  }
-
-  async function handleRenameList(listId: string) {
-    const trimmedName = renameDraft.trim();
+  async function handleRenameList(listId: string, newName: string = '') {
+    const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      setRenameErrorKey('validation.requiredListName');
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('validation.requiredListName'),
+      );
       return;
     }
-
-    setRenameErrorKey(null);
 
     try {
       await renameListMutation.mutateAsync({
@@ -264,16 +241,36 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         name: trimmedName,
       });
     } catch (error) {
-      setRenameErrorKey(
-        error instanceof Error ? error.message : 'common.errors.saveFailed',
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
       );
     }
+  }
+
+  function startRename(list: ShoppingListSummary) {
+    Alert.prompt(
+      t('shoppingLists.renameTitle'),
+      '',
+      [
+        {
+          text: t('common.actions.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.actions.confirm'),
+          onPress: (text?: string) => handleRenameList(list.id, text),
+        },
+      ],
+      'plain-text',
+      list.name,
+    );
   }
 
   function confirmDeleteList(list: ShoppingListSummary) {
     Alert.alert(
       t('shoppingLists.confirmDeleteTitle'),
-      t('shoppingLists.confirmDeleteMessage', { name: list.name }),
+      `${t('shoppingLists.confirmDeleteMessage', { name: list.name })}\n\n${t('shoppingLists.actionCannotBeUndone')}`,
       [
         {
           style: 'cancel',
@@ -281,7 +278,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         },
         {
           onPress: () => {
-            setDeletingListId(list.id);
             deleteListMutation.mutate(list.id);
           },
           style: 'destructive',
@@ -358,107 +354,58 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            {editingListId === item.id ? (
-              <View style={styles.form}>
-                <AppTextInput
-                  label={t('shoppingLists.renameTitle')}
-                  onChangeText={setRenameDraft}
-                  placeholder={t('shoppingLists.renamePlaceholder')}
-                  value={renameDraft}
-                />
-                {renameErrorKey ? (
-                  <Text style={styles.error}>{t(renameErrorKey)}</Text>
-                ) : null}
-                <View style={styles.actionRow}>
-                  <Pressable
-                    onPress={() => void handleRenameList(item.id)}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.primaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.primaryActionText}>
-                      {renameListMutation.isPending
-                        ? t('shoppingLists.renaming')
-                        : t('common.actions.confirm')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={cancelRename}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.secondaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.secondaryActionText}>
-                      {t('common.actions.cancel')}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardMeta}>
-                  {t('shoppingLists.updatedLabel', {
-                    date: formatDate(item.updated_at, i18n.language),
-                  })}
-                </Text>
-                <Text style={styles.cardMeta}>
-                  {t('shoppingLists.progressValue', {
-                    completed: item.completedCount,
-                    total: item.itemCount,
-                  })}
-                </Text>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <View style={styles.cardActions}>
                 <Pressable
-                  onPress={() =>
-                    navigation.navigate('ShoppingListDetail', {
-                      listId: item.id,
-                      listName: item.name,
-                    })
-                  }
+                  onPress={() => startRename(item)}
                   style={({ pressed }) => [
-                    styles.linkButton,
+                    styles.iconButton,
                     pressed ? styles.actionPressed : null,
                   ]}
+                  accessibilityLabel={t('shoppingLists.renameAction')}
                 >
-                  <Text style={styles.linkButtonText}>
-                    {t('shoppingLists.openAction')}
-                  </Text>
+                  <Feather name="edit-2" size={20} color="#374151" />
                 </Pressable>
-                <View style={styles.actionRow}>
-                  <Pressable
-                    onPress={() => startRename(item)}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.secondaryAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.secondaryActionText}>
-                      {t('shoppingLists.renameAction')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => confirmDeleteList(item)}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      styles.destructiveAction,
-                      pressed ? styles.actionPressed : null,
-                    ]}
-                  >
-                    <Text style={styles.destructiveActionText}>
-                      {deleteListMutation.isPending &&
-                      deletingListId === item.id
-                        ? t('shoppingLists.deleting')
-                        : t('shoppingLists.deleteAction')}
-                    </Text>
-                  </Pressable>
-                </View>
-              </>
-            )}
+                <Pressable
+                  onPress={() => confirmDeleteList(item)}
+                  style={({ pressed }) => [
+                    styles.iconButton,
+                    pressed ? styles.actionPressed : null,
+                  ]}
+                  accessibilityLabel={t('shoppingLists.deleteAction')}
+                >
+                  <Feather name="trash-2" size={20} color="#b91c1c" />
+                </Pressable>
+              </View>
+            </View>
+            <Text style={styles.cardMeta}>
+              {t('shoppingLists.updatedLabel', {
+                date: formatDate(item.updated_at, i18n.language),
+              })}
+            </Text>
+            <Text style={styles.cardMeta}>
+              {t('shoppingLists.progressValue', {
+                completed: item.completedCount,
+                total: item.itemCount,
+              })}
+            </Text>
+            <Pressable
+              onPress={() =>
+                navigation.navigate('ShoppingListDetail', {
+                  listId: item.id,
+                  listName: item.name,
+                })
+              }
+              style={({ pressed }) => [
+                styles.linkButton,
+                pressed ? styles.actionPressed : null,
+              ]}
+            >
+              <Text style={styles.linkButtonText}>
+                {t('shoppingLists.openAction')}
+              </Text>
+            </Pressable>
           </View>
         )}
       />
@@ -484,10 +431,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   cardTitle: {
     color: '#111827',
     fontSize: 18,
     fontWeight: '700',
+    flex: 1,
+    marginRight: 8,
+  },
+  iconButton: {
+    padding: 4,
   },
   actionButton: {
     alignItems: 'center',
