@@ -74,8 +74,12 @@ export const pl = {
     loadingSession: 'Sprawdzanie lokalnej sesji Supabase...',
   },
   shoppingLists: {
+    confirmDeleteMessage:
+      'Usunąć „{{name}}”? Wszystkie produkty z tej listy również zostaną usunięte.',
+    confirmDeleteTitle: 'Usunąć tę listę zakupów?',
     createAction: 'Utwórz listę',
     creating: 'Tworzenie listy...',
+    deleting: 'Usuwanie listy...',
     namePlaceholder: 'Zakupy na sobotę',
     createTitle: 'Nowa lista zakupów',
     deleteAction: 'Usuń listę',

@@ -134,3 +134,35 @@ export async function renameShoppingList(
     errorKey: null,
   };
 }
+
+export async function deleteShoppingList(
+  listId: string,
+  userId: string,
+): Promise<ShoppingListResult<null>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { error: deleteError } = await client
+    .from('shopping_lists')
+    .delete()
+    .eq('id', listId)
+    .eq('user_id', userId);
+
+  if (deleteError) {
+    return {
+      data: null,
+      errorKey: 'common.errors.deleteFailed',
+    };
+  }
+
+  return {
+    data: null,
+    errorKey: null,
+  };
+}

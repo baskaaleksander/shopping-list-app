@@ -74,8 +74,12 @@ export const en = {
     loadingSession: 'Checking your local Supabase session...',
   },
   shoppingLists: {
+    confirmDeleteMessage:
+      'Delete "{{name}}"? All items in this list will be removed as well.',
+    confirmDeleteTitle: 'Delete this shopping list?',
     createAction: 'Create list',
     creating: 'Creating list...',
+    deleting: 'Deleting list...',
     namePlaceholder: 'Groceries for Saturday',
     createTitle: 'New shopping list',
     deleteAction: 'Delete list',

@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +21,7 @@ import type { ShoppingListSummary } from '../api';
 
 import {
   createShoppingList,
+  deleteShoppingList,
   fetchShoppingLists,
   renameShoppingList,
 } from '../api';
@@ -50,6 +58,7 @@ export function ShoppingListsHomeScreen() {
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameErrorKey, setRenameErrorKey] = useState<string | null>(null);
+  const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const user: SessionUser | null = session?.user
     ? {
@@ -149,6 +158,46 @@ export function ShoppingListsHomeScreen() {
     },
   });
 
+  const deleteListMutation = useMutation({
+    mutationFn: async (listId: string) => {
+      if (!user?.id) {
+        throw new Error('common.errors.deleteFailed');
+      }
+
+      const result = await deleteShoppingList(listId, user.id);
+
+      if (result.errorKey) {
+        throw new Error(result.errorKey);
+      }
+    },
+    onSuccess: (_data, deletedListId) => {
+      queryClient.setQueryData(
+        ['shopping-lists', user?.id],
+        (currentLists: typeof shoppingListsQuery.data) => {
+          const existingLists = currentLists ?? [];
+
+          return existingLists.filter((list) => list.id !== deletedListId);
+        },
+      );
+      if (editingListId === deletedListId) {
+        cancelRename();
+      }
+      setFeedback({
+        key: 'common.feedback.listDeleted',
+        tone: 'success',
+      });
+    },
+    onError: () => {
+      setFeedback({
+        key: 'common.errors.deleteFailed',
+        tone: 'error',
+      });
+    },
+    onSettled: () => {
+      setDeletingListId(null);
+    },
+  });
+
   const queryErrorKey = useMemo(() => {
     if (!(shoppingListsQuery.error instanceof Error)) {
       return null;
@@ -213,6 +262,27 @@ export function ShoppingListsHomeScreen() {
         tone: 'error',
       });
     }
+  }
+
+  function confirmDeleteList(list: ShoppingListSummary) {
+    Alert.alert(
+      t('shoppingLists.confirmDeleteTitle'),
+      t('shoppingLists.confirmDeleteMessage', { name: list.name }),
+      [
+        {
+          style: 'cancel',
+          text: t('common.actions.cancel'),
+        },
+        {
+          onPress: () => {
+            setDeletingListId(list.id);
+            deleteListMutation.mutate(list.id);
+          },
+          style: 'destructive',
+          text: t('shoppingLists.deleteAction'),
+        },
+      ],
+    );
   }
 
   if (shoppingListsQuery.isLoading) {
@@ -359,6 +429,21 @@ export function ShoppingListsHomeScreen() {
                       {t('shoppingLists.renameAction')}
                     </Text>
                   </Pressable>
+                  <Pressable
+                    onPress={() => confirmDeleteList(item)}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.destructiveAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text style={styles.destructiveActionText}>
+                      {deleteListMutation.isPending &&
+                      deletingListId === item.id
+                        ? t('shoppingLists.deleting')
+                        : t('shoppingLists.deleteAction')}
+                    </Text>
+                  </Pressable>
                 </View>
               </>
             )}
@@ -412,6 +497,14 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
     fontSize: 14,
     lineHeight: 22,
+  },
+  destructiveAction: {
+    backgroundColor: '#b91c1c',
+  },
+  destructiveActionText: {
+    color: '#fef2f2',
+    fontSize: 14,
+    fontWeight: '600',
   },
   feedbackError: {
     color: '#b91c1c',
