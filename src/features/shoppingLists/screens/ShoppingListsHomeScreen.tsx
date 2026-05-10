@@ -12,8 +12,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import Feather from '@expo/vector-icons/Feather';
 
-import { AppLoader } from '../../../components/AppLoader';
+import { AppDialog } from '../../../components/AppDialog';
 import { AppButton } from '../../../components/AppButton';
+import { AppLoader } from '../../../components/AppLoader';
 import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
@@ -52,8 +53,14 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   const { session, signOut } = useSession();
   const { i18n, t } = useTranslation();
   const queryClient = useQueryClient();
-  const [draftName, setDraftName] = useState('');
-  const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
+  const [deletingList, setDeletingList] = useState<ShoppingListSummary | null>(
+    null,
+  );
+  const [editingList, setEditingList] = useState<ShoppingListSummary | null>(
+    null,
+  );
+  const [renameDraft, setRenameDraft] = useState('');
+  const [renameErrorKey, setRenameErrorKey] = useState<string | null>(null);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -105,12 +112,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           return sortShoppingLists([newList, ...existingLists]);
         },
       );
-      setDraftName('');
-      setCreateErrorKey(null);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.listCreated'),
-      );
     },
   });
 
@@ -146,6 +147,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           );
         },
       );
+      closeRenameDialog();
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listRenamed'),
@@ -174,12 +176,14 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           return existingLists.filter((list) => list.id !== deletedListId);
         },
       );
+      setDeletingList(null);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listDeleted'),
       );
     },
-    onError: (error) => {
+    onError: () => {
+      setDeletingList(null);
       Alert.alert(
         t('common.feedback.errorTitle'),
         t('common.errors.deleteFailed'),
@@ -204,15 +208,16 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     return shoppingListsQuery.error.message;
   }, [shoppingListsQuery.error]);
 
-  async function handleCreateList() {
-    const trimmedName = draftName.trim();
+  async function handleCreateList(newName: string = '') {
+    const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      setCreateErrorKey('validation.requiredListName');
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('validation.requiredListName'),
+      );
       return;
     }
-
-    setCreateErrorKey(null);
 
     try {
       await createListMutation.mutateAsync(trimmedName);
@@ -224,16 +229,52 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     }
   }
 
+  function startCreateList() {
+    Alert.prompt(
+      t('shoppingLists.createTitle'),
+      '',
+      [
+        {
+          text: t('common.actions.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.actions.confirm'),
+          onPress: (text?: string) => handleCreateList(text),
+        },
+      ],
+      'plain-text',
+      '',
+    );
+  }
+
+  function closeDeleteDialog() {
+    if (deleteListMutation.isPending) {
+      return;
+    }
+
+    setDeletingList(null);
+  }
+
+  function closeRenameDialog() {
+    if (renameListMutation.isPending) {
+      return;
+    }
+
+    setEditingList(null);
+    setRenameDraft('');
+    setRenameErrorKey(null);
+  }
+
   async function handleRenameList(listId: string, newName: string = '') {
     const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('validation.requiredListName'),
-      );
+      setRenameErrorKey('validation.requiredListName');
       return;
     }
+
+    setRenameErrorKey(null);
 
     try {
       await renameListMutation.mutateAsync({
@@ -249,43 +290,31 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   }
 
   function startRename(list: ShoppingListSummary) {
-    Alert.prompt(
-      t('shoppingLists.renameTitle'),
-      '',
-      [
-        {
-          text: t('common.actions.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.actions.confirm'),
-          onPress: (text?: string) => handleRenameList(list.id, text),
-        },
-      ],
-      'plain-text',
-      list.name,
-    );
+    setEditingList(list);
+    setRenameDraft(list.name);
+    setRenameErrorKey(null);
   }
 
   function confirmDeleteList(list: ShoppingListSummary) {
-    Alert.alert(
-      t('shoppingLists.confirmDeleteTitle'),
-      `${t('shoppingLists.confirmDeleteMessage', { name: list.name })}\n\n${t('shoppingLists.actionCannotBeUndone')}`,
-      [
-        {
-          style: 'cancel',
-          text: t('common.actions.cancel'),
-        },
-        {
-          onPress: () => {
-            deleteListMutation.mutate(list.id);
-          },
-          style: 'destructive',
-          text: t('shoppingLists.deleteAction'),
-        },
-      ],
-    );
+    setDeletingList(list);
   }
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() => void signOut()}
+          style={({ pressed }) => [
+            styles.iconButton,
+            pressed ? styles.actionPressed : null,
+          ]}
+          accessibilityLabel={t('shoppingLists.signOutAction')}
+        >
+          <Feather name="log-out" size={20} color="#374151" />
+        </Pressable>
+      ),
+    });
+  }, [navigation, signOut, t]);
 
   if (shoppingListsQuery.isPending) {
     return (
@@ -317,40 +346,6 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
               />
             </View>
           )
-        }
-        ListHeaderComponent={
-          <View style={styles.stack}>
-            <EmptyState
-              description={t('shoppingLists.subtitle')}
-              title={t('shoppingLists.title')}
-            />
-            <View style={styles.form}>
-              <AppTextInput
-                label={t('shoppingLists.createTitle')}
-                onChangeText={setDraftName}
-                placeholder={t('shoppingLists.namePlaceholder')}
-                value={draftName}
-              />
-              {createErrorKey ? (
-                <Text style={styles.error}>{t(createErrorKey)}</Text>
-              ) : null}
-              <AppButton
-                disabled={createListMutation.isPending}
-                onPress={() => void handleCreateList()}
-              >
-                {createListMutation.isPending
-                  ? t('shoppingLists.creating')
-                  : t('shoppingLists.createAction')}
-              </AppButton>
-            </View>
-
-            <Text style={styles.status}>
-              {user?.email ?? t('shoppingLists.noEmail')}
-            </Text>
-            <AppButton onPress={() => void signOut()}>
-              {t('shoppingLists.signOutAction')}
-            </AppButton>
-          </View>
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
@@ -409,6 +404,87 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           </View>
         )}
       />
+      <Pressable
+        style={({ pressed }) => [
+          styles.fab,
+          pressed ? styles.actionPressed : null,
+        ]}
+        onPress={startCreateList}
+        accessibilityLabel={t('shoppingLists.createAction')}
+      >
+        <Feather name="plus" size={24} color="#ffffff" />
+      </Pressable>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={renameListMutation.isPending}
+              onPress={closeRenameDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={renameListMutation.isPending}
+              onPress={() =>
+                editingList
+                  ? void handleRenameList(editingList.id, renameDraft)
+                  : undefined
+              }
+            >
+              {renameListMutation.isPending
+                ? t('shoppingLists.renaming')
+                : t('common.actions.confirm')}
+            </AppButton>
+          </>
+        }
+        onRequestClose={closeRenameDialog}
+        title={t('shoppingLists.renameTitle')}
+        visible={Boolean(editingList)}
+      >
+        <AppTextInput
+          label={t('shoppingLists.renameTitle')}
+          onChangeText={setRenameDraft}
+          placeholder={t('shoppingLists.renamePlaceholder')}
+          value={renameDraft}
+        />
+        {renameErrorKey ? (
+          <Text style={styles.error}>{t(renameErrorKey)}</Text>
+        ) : null}
+      </AppDialog>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={deleteListMutation.isPending}
+              onPress={closeDeleteDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={deleteListMutation.isPending}
+              onPress={() =>
+                deletingList
+                  ? deleteListMutation.mutate(deletingList.id)
+                  : undefined
+              }
+            >
+              {deleteListMutation.isPending
+                ? t('shoppingLists.deleting')
+                : t('shoppingLists.deleteAction')}
+            </AppButton>
+          </>
+        }
+        message={
+          deletingList
+            ? `${t('shoppingLists.confirmDeleteMessage', { name: deletingList.name })}\n\n${t('shoppingLists.actionCannotBeUndone')}`
+            : undefined
+        }
+        onRequestClose={closeDeleteDialog}
+        title={t('shoppingLists.confirmDeleteTitle')}
+        visible={Boolean(deletingList)}
+      />
     </Screen>
   );
 }
@@ -417,6 +493,22 @@ const styles = StyleSheet.create({
   content: {
     gap: 16,
     paddingBottom: 24,
+  },
+  fab: {
+    alignItems: 'center',
+    backgroundColor: '#111827',
+    borderRadius: 28,
+    bottom: 24,
+    elevation: 5,
+    height: 56,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    width: 56,
   },
   card: {
     backgroundColor: '#ffffff',
@@ -449,6 +541,9 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 4,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionButton: {
     alignItems: 'center',

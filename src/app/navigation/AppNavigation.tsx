@@ -9,6 +9,7 @@ import { ShoppingListDetailScreen } from '../../features/items';
 import { ShoppingListsHomeScreen } from '../../features/shoppingLists';
 import { useSession } from '../providers/SessionProvider';
 import type { RootStackParamList } from '../../types/navigation';
+import { AccountManagementScreen } from '../../features/account';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -44,6 +45,11 @@ export function AppNavigation() {
               component={ShoppingListDetailScreen}
               name="ShoppingListDetail"
               options={({ route }) => ({ title: route.params.listName })}
+            />
+            <Stack.Screen
+              component={AccountManagementScreen}
+              name="AccountManagement"
+              options={{title: t('navigation.accountManagementTitle')}}
             />
           </>
         ) : (

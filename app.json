@@ -14,11 +14,16 @@
     },
     "ios": {
       "supportsTablet": false,
-      "deploymentTarget": "15.0"
+      "deploymentTarget": "15.0",
+      "bundleIdentifier": "com.anonymous.shopping-list-app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-localization", "expo-asset", "expo-font"]
+    "plugins": [
+      "expo-localization",
+      "expo-asset",
+      "expo-font"
+    ]
   }
 }

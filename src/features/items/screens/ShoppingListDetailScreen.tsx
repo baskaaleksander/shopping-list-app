@@ -12,6 +12,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import Feather from '@expo/vector-icons/Feather';
 
+import { AppDialog } from '../../../components/AppDialog';
 import { AppLoader } from '../../../components/AppLoader';
 import { AppButton } from '../../../components/AppButton';
 import { AppTextInput } from '../../../components/AppTextInput';
@@ -36,6 +37,17 @@ export function ShoppingListDetailScreen({ route }: Props) {
   const [draftName, setDraftName] = useState('');
   const [draftQuantity, setDraftQuantity] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [editErrorKey, setEditErrorKey] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editingItem, setEditingItem] = useState<{
+    id: string;
+  } | null>(null);
+  const [isCreateDialogVisible, setCreateDialogVisible] = useState(false);
   const user: SessionUser | null = session?.user
     ? {
         email: session.user.email ?? null,
@@ -98,6 +110,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
       setDraftName('');
       setDraftQuantity('');
       setCreateErrorKey(null);
+      setCreateDialogVisible(false);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemAdded'),
@@ -141,6 +154,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
           );
         },
       );
+      closeEditItemDialog();
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemUpdated'),
@@ -259,8 +273,14 @@ export function ShoppingListDetailScreen({ route }: Props) {
       }
 
       queryClient.setQueryData(context.queryKey, context.previousItems);
+      setDeletingItem(null);
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.deleteFailed'),
+      );
     },
-    onSuccess: (_data, deletedItemId) => {
+    onSuccess: () => {
+      setDeletingItem(null);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemDeleted'),
@@ -292,6 +312,43 @@ export function ShoppingListDetailScreen({ route }: Props) {
   }
 
   const completedCount = items.filter((item) => item.completed).length;
+
+  function openCreateItemDialog() {
+    setDraftName('');
+    setDraftQuantity('');
+    setCreateErrorKey(null);
+    setCreateDialogVisible(true);
+  }
+
+  function closeCreateItemDialog() {
+    if (createItemMutation.isPending) {
+      return;
+    }
+
+    setCreateDialogVisible(false);
+    setDraftName('');
+    setDraftQuantity('');
+    setCreateErrorKey(null);
+  }
+
+  function closeDeleteItemDialog() {
+    if (deleteItemMutation.isPending) {
+      return;
+    }
+
+    setDeletingItem(null);
+  }
+
+  function closeEditItemDialog() {
+    if (updateItemMutation.isPending) {
+      return;
+    }
+
+    setEditingItem(null);
+    setEditErrorKey(null);
+    setEditName('');
+    setEditQuantity('');
+  }
 
   async function handleCreateItem() {
     const trimmedName = draftName.trim();
@@ -327,24 +384,32 @@ export function ShoppingListDetailScreen({ route }: Props) {
 
   async function handleUpdateItem(
     itemId: string,
-    newName: string = '',
-    quantity: number,
+    newName: string,
+    newQuantity: string,
   ) {
     const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('validation.requiredItemName'),
-      );
+      setEditErrorKey('validation.requiredItemName');
       return;
     }
+
+    const parsedQuantity = newQuantity.trim()
+      ? Number.parseInt(newQuantity.trim(), 10)
+      : 1;
+
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setEditErrorKey('validation.invalidQuantity');
+      return;
+    }
+
+    setEditErrorKey(null);
 
     try {
       await updateItemMutation.mutateAsync({
         itemId,
         name: trimmedName,
-        quantity,
+        quantity: parsedQuantity,
       });
     } catch (error) {
       Alert.alert(
@@ -355,22 +420,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
   }
 
   function startEditingItem(itemId: string, name: string, quantity: number) {
-    Alert.prompt(
-      t('items.editAction'),
-      '',
-      [
-        {
-          text: t('common.actions.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.actions.confirm'),
-          onPress: (text?: string) => handleUpdateItem(itemId, text, quantity),
-        },
-      ],
-      'plain-text',
-      name,
-    );
+    setEditingItem({ id: itemId });
+    setEditName(name);
+    setEditQuantity(String(quantity));
+    setEditErrorKey(null);
   }
 
   function toggleItemCompletion(itemId: string, completed: boolean) {
@@ -381,23 +434,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
   }
 
   function confirmDeleteItem(itemId: string, itemName: string) {
-    Alert.alert(
-      t('items.confirmDeleteTitle'),
-      `${t('items.confirmDeleteMessage', { name: itemName })}\n\n${t('shoppingLists.actionCannotBeUndone')}`,
-      [
-        {
-          style: 'cancel',
-          text: t('common.actions.cancel'),
-        },
-        {
-          onPress: () => {
-            deleteItemMutation.mutate(itemId);
-          },
-          style: 'destructive',
-          text: t('items.deleteAction'),
-        },
-      ],
-    );
+    setDeletingItem({ id: itemId, name: itemName });
   }
 
   return (
@@ -425,34 +462,6 @@ export function ShoppingListDetailScreen({ route }: Props) {
                   total: items.length,
                 })}
               </Text>
-            </View>
-            <View style={styles.formCard}>
-              <Text style={styles.formTitle}>{t('items.addAction')}</Text>
-              <AppTextInput
-                label={t('items.nameLabel')}
-                onChangeText={setDraftName}
-                placeholder={t('items.namePlaceholder')}
-                value={draftName}
-              />
-              <AppTextInput
-                keyboardType="number-pad"
-                label={t('items.quantityLabel')}
-                onChangeText={setDraftQuantity}
-                placeholder={t('items.quantityPlaceholder')}
-                value={draftQuantity}
-              />
-              <Text style={styles.hint}>{t('items.defaultQuantityHint')}</Text>
-              {createErrorKey ? (
-                <Text style={styles.error}>{t(createErrorKey)}</Text>
-              ) : null}
-              <AppButton
-                disabled={createItemMutation.isPending}
-                onPress={() => void handleCreateItem()}
-              >
-                {createItemMutation.isPending
-                  ? t('items.creating')
-                  : t('items.addAction')}
-              </AppButton>
             </View>
           </View>
         }
@@ -536,6 +545,141 @@ export function ShoppingListDetailScreen({ route }: Props) {
           </View>
         )}
       />
+      <Pressable
+        accessibilityLabel={t('items.addAction')}
+        onPress={openCreateItemDialog}
+        style={({ pressed }) => [
+          styles.fab,
+          pressed ? styles.actionPressed : null,
+        ]}
+      >
+        <Feather name="plus" size={24} color="#ffffff" />
+      </Pressable>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={createItemMutation.isPending}
+              onPress={closeCreateItemDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={createItemMutation.isPending}
+              onPress={() => void handleCreateItem()}
+            >
+              {createItemMutation.isPending
+                ? t('items.creating')
+                : t('common.actions.confirm')}
+            </AppButton>
+          </>
+        }
+        onRequestClose={closeCreateItemDialog}
+        title={t('items.addAction')}
+        visible={isCreateDialogVisible}
+      >
+        <AppTextInput
+          label={t('items.nameLabel')}
+          onChangeText={setDraftName}
+          placeholder={t('items.namePlaceholder')}
+          value={draftName}
+        />
+        <AppTextInput
+          keyboardType="number-pad"
+          label={t('items.quantityLabel')}
+          onChangeText={setDraftQuantity}
+          placeholder={t('items.quantityPlaceholder')}
+          value={draftQuantity}
+        />
+        <Text style={styles.hint}>{t('items.defaultQuantityHint')}</Text>
+        {createErrorKey ? (
+          <Text style={styles.error}>{t(createErrorKey)}</Text>
+        ) : null}
+      </AppDialog>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={updateItemMutation.isPending}
+              onPress={closeEditItemDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={updateItemMutation.isPending}
+              onPress={() =>
+                editingItem
+                  ? void handleUpdateItem(
+                      editingItem.id,
+                      editName,
+                      editQuantity,
+                    )
+                  : undefined
+              }
+            >
+              {updateItemMutation.isPending
+                ? t('items.updating')
+                : t('common.actions.confirm')}
+            </AppButton>
+          </>
+        }
+        onRequestClose={closeEditItemDialog}
+        title={t('items.editAction')}
+        visible={Boolean(editingItem)}
+      >
+        <AppTextInput
+          label={t('items.nameLabel')}
+          onChangeText={setEditName}
+          placeholder={t('items.namePlaceholder')}
+          value={editName}
+        />
+        <AppTextInput
+          keyboardType="number-pad"
+          label={t('items.quantityLabel')}
+          onChangeText={setEditQuantity}
+          placeholder={t('items.quantityPlaceholder')}
+          value={editQuantity}
+        />
+        <Text style={styles.hint}>{t('items.defaultQuantityHint')}</Text>
+        {editErrorKey ? (
+          <Text style={styles.error}>{t(editErrorKey)}</Text>
+        ) : null}
+      </AppDialog>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={deleteItemMutation.isPending}
+              onPress={closeDeleteItemDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={deleteItemMutation.isPending}
+              onPress={() =>
+                deletingItem
+                  ? deleteItemMutation.mutate(deletingItem.id)
+                  : undefined
+              }
+            >
+              {deleteItemMutation.isPending
+                ? t('items.deleting')
+                : t('items.deleteAction')}
+            </AppButton>
+          </>
+        }
+        message={
+          deletingItem
+            ? `${t('items.confirmDeleteMessage', { name: deletingItem.name })}\n\n${t('shoppingLists.actionCannotBeUndone')}`
+            : undefined
+        }
+        onRequestClose={closeDeleteItemDialog}
+        title={t('items.confirmDeleteTitle')}
+        visible={Boolean(deletingItem)}
+      />
     </Screen>
   );
 }
@@ -567,7 +711,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 12,
-    paddingBottom: 24,
+    paddingBottom: 96,
   },
   completedCard: {
     backgroundColor: '#ecfdf5',
@@ -586,26 +730,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  fab: {
+    alignItems: 'center',
+    backgroundColor: '#111827',
+    borderRadius: 28,
+    bottom: 24,
+    elevation: 5,
+    height: 56,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    width: 56,
+  },
   error: {
     color: '#b91c1c',
     fontSize: 14,
     lineHeight: 22,
   },
-  formCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e5e7eb',
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 12,
-    padding: 18,
-  },
   formTitle: {
     color: '#111827',
     fontSize: 18,
     fontWeight: '700',
-  },
-  formStack: {
-    gap: 12,
   },
   headerStack: {
     gap: 12,
@@ -630,24 +779,6 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: 12,
-  },
-  linkButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  linkButtonText: {
-    color: '#2563eb',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  linkDeleteButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  linkDeleteButtonText: {
-    color: '#b91c1c',
-    fontSize: 14,
-    fontWeight: '600',
   },
   primaryAction: {
     backgroundColor: '#111827',

@@ -19,11 +19,16 @@ describe('Localization', () => {
     it('falls back to English text if translation is missing in another language', async () => {
       // Wait for i18n to initialize if it hasn't
       await i18n.init();
-      
-      i18n.addResource('en', 'translation', 'test.fallbackKey', 'Fallback English Text');
-      
+
+      i18n.addResource(
+        'en',
+        'translation',
+        'test.fallbackKey',
+        'Fallback English Text',
+      );
+
       await i18n.changeLanguage('pl');
-      
+
       expect(i18n.t('test.fallbackKey')).toBe('Fallback English Text');
     });
   });

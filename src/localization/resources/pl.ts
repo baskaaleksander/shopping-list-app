@@ -85,11 +85,13 @@ export const pl = {
     signInTitle: 'Logowanie',
     signUpTitle: 'Utwórz konto',
     shoppingListsHomeTitle: 'Listy zakupów',
+    accountManagementTitle: 'Zarządzanie kontem',
   },
   shell: {
     loadingSession: 'Sprawdzanie lokalnej sesji Supabase...',
   },
   shoppingLists: {
+    actionCannotBeUndone: 'Tej akcji nie można cofnąć.',
     confirmDeleteMessage:
       'Usunąć „{{name}}”? Wszystkie produkty z tej listy również zostaną usunięte.',
     confirmDeleteTitle: 'Usunąć tę listę zakupów?',

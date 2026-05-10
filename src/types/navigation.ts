@@ -6,4 +6,5 @@ export type RootStackParamList = {
     listId: string;
     listName: string;
   };
+  AccountManagement: undefined;
 };

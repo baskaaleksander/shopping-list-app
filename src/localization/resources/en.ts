@@ -84,11 +84,13 @@ export const en = {
     signInTitle: 'Sign in',
     signUpTitle: 'Create account',
     shoppingListsHomeTitle: 'Shopping lists',
+    accountManagementTitle: 'Account management',
   },
   shell: {
     loadingSession: 'Checking your local Supabase session...',
   },
   shoppingLists: {
+    actionCannotBeUndone: 'This action cannot be undone.',
     confirmDeleteMessage:
       'Delete "{{name}}"? All items in this list will be removed as well.',
     confirmDeleteTitle: 'Delete this shopping list?',
