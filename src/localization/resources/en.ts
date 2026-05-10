@@ -61,8 +61,11 @@ export const en = {
     emptyDescription:
       'Add your first item to start tracking shopping progress.',
     emptyTitle: 'No items yet',
+    loading: 'Loading items in this list...',
     nameLabel: 'Item name',
+    pendingLabel: 'Pending',
     quantityLabel: 'Quantity',
+    quantityValue: 'Quantity: {{count}}',
   },
   navigation: {
     listDetailTitle: 'List details',
@@ -89,6 +92,7 @@ export const en = {
     loadFailedTitle: 'Shopping lists are unavailable',
     loading: 'Loading your shopping lists...',
     noEmail: 'Signed-in email unavailable',
+    openAction: 'Open list',
     progressLabel: 'Progress',
     progressValue: '{{completed}}/{{total}} completed',
     renamePlaceholder: 'Updated shopping list name',

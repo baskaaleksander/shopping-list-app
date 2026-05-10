@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import { AppLoader } from '../../../components/AppLoader';
@@ -16,7 +17,7 @@ import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
-import type { SessionUser } from '../../../types/auth';
+import type { RootStackParamList, SessionUser } from '../../../types';
 import type { ShoppingListSummary } from '../api';
 
 import {
@@ -30,6 +31,8 @@ type FeedbackState = {
   key: string;
   tone: 'error' | 'success';
 };
+
+type Props = NativeStackScreenProps<RootStackParamList, 'ShoppingListsHome'>;
 
 function sortShoppingLists(lists: ShoppingListSummary[]) {
   return [...lists].sort(
@@ -49,7 +52,7 @@ function formatDate(date: string, language: string) {
   }
 }
 
-export function ShoppingListsHomeScreen() {
+export function ShoppingListsHomeScreen({ navigation }: Props) {
   const { session, signOut } = useSession();
   const { i18n, t } = useTranslation();
   const queryClient = useQueryClient();
@@ -416,6 +419,22 @@ export function ShoppingListsHomeScreen() {
                     total: item.itemCount,
                   })}
                 </Text>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate('ShoppingListDetail', {
+                      listId: item.id,
+                      listName: item.name,
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed ? styles.actionPressed : null,
+                  ]}
+                >
+                  <Text style={styles.linkButtonText}>
+                    {t('shoppingLists.openAction')}
+                  </Text>
+                </Pressable>
                 <View style={styles.actionRow}>
                   <Pressable
                     onPress={() => startRename(item)}
@@ -518,6 +537,15 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 12,
+  },
+  linkButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+  },
+  linkButtonText: {
+    color: '#2563eb',
+    fontSize: 14,
+    fontWeight: '600',
   },
   primaryAction: {
     backgroundColor: '#111827',

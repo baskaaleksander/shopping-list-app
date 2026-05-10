@@ -61,8 +61,11 @@ export const pl = {
     emptyDescription:
       'Dodaj pierwszy produkt, aby zacząć śledzić postęp zakupów.',
     emptyTitle: 'Brak produktów',
+    loading: 'Wczytywanie produktów z tej listy...',
     nameLabel: 'Nazwa produktu',
+    pendingLabel: 'Do kupienia',
     quantityLabel: 'Ilość',
+    quantityValue: 'Ilość: {{count}}',
   },
   navigation: {
     listDetailTitle: 'Szczegóły listy',
@@ -88,6 +91,7 @@ export const pl = {
     loadFailedTitle: 'Listy zakupów są niedostępne',
     loading: 'Wczytywanie list zakupów...',
     noEmail: 'Brak adresu e-mail zalogowanego użytkownika',
+    openAction: 'Otwórz listę',
     progressLabel: 'Postęp',
     progressValue: '{{completed}}/{{total}} ukończono',
     renamePlaceholder: 'Zaktualizowana nazwa listy zakupów',

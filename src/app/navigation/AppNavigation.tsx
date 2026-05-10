@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AppLoader } from '../../components/AppLoader';
 import { Screen } from '../../components/Screen';
 import { SignInScreen, SignUpScreen } from '../../features/auth';
+import { ShoppingListDetailScreen } from '../../features/items';
 import { ShoppingListsHomeScreen } from '../../features/shoppingLists';
 import { useSession } from '../providers/SessionProvider';
 import type { RootStackParamList } from '../../types/navigation';
@@ -33,11 +34,18 @@ export function AppNavigation() {
     <NavigationContainer>
       <Stack.Navigator>
         {session ? (
-          <Stack.Screen
-            component={ShoppingListsHomeScreen}
-            name="ShoppingListsHome"
-            options={{ title: t('navigation.shoppingListsHomeTitle') }}
-          />
+          <>
+            <Stack.Screen
+              component={ShoppingListsHomeScreen}
+              name="ShoppingListsHome"
+              options={{ title: t('navigation.shoppingListsHomeTitle') }}
+            />
+            <Stack.Screen
+              component={ShoppingListDetailScreen}
+              name="ShoppingListDetail"
+              options={({ route }) => ({ title: route.params.listName })}
+            />
+          </>
         ) : (
           <>
             <Stack.Screen
