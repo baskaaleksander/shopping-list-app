@@ -115,6 +115,9 @@ export function ShoppingListDetailScreen({ route }: Props) {
         t('common.feedback.successTitle'),
         t('common.feedback.itemAdded'),
       );
+      void queryClient.invalidateQueries({
+        queryKey: ['shopping-lists', user?.id],
+      });
     },
   });
 
@@ -154,11 +157,14 @@ export function ShoppingListDetailScreen({ route }: Props) {
           );
         },
       );
-      closeEditItemDialog();
+      closeEditItemDialog(true);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.itemUpdated'),
       );
+      void queryClient.invalidateQueries({
+        queryKey: ['shopping-lists', user?.id],
+      });
     },
   });
 
@@ -229,6 +235,9 @@ export function ShoppingListDetailScreen({ route }: Props) {
           );
         },
       );
+      void queryClient.invalidateQueries({
+        queryKey: ['shopping-lists', user?.id],
+      });
     },
   });
 
@@ -285,6 +294,9 @@ export function ShoppingListDetailScreen({ route }: Props) {
         t('common.feedback.successTitle'),
         t('common.feedback.itemDeleted'),
       );
+      void queryClient.invalidateQueries({
+        queryKey: ['shopping-lists', user?.id],
+      });
     },
   });
 
@@ -339,8 +351,8 @@ export function ShoppingListDetailScreen({ route }: Props) {
     setDeletingItem(null);
   }
 
-  function closeEditItemDialog() {
-    if (updateItemMutation.isPending) {
+  function closeEditItemDialog(force = false) {
+    if (!force && updateItemMutation.isPending) {
       return;
     }
 

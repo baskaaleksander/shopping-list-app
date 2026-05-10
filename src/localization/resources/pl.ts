@@ -1,4 +1,21 @@
 export const pl = {
+  account: {
+    emailLabel: 'E-mail',
+    openAction: 'Otwórz zarządzanie kontem',
+    profileSettings: 'Ustawienia profilu',
+    sessionHint:
+      'Wyloguj się na tym urządzeniu, jeśli chcesz zabezpieczyć swoje dane zakupowe.',
+    sessionTitle: 'Sesja',
+    signOutAction: 'Wyloguj się',
+    signOutMessage:
+      'Aby ponownie uzyskać dostęp do prywatnych list zakupów, trzeba będzie zalogować się ponownie.',
+    signOutTitle: 'Wylogować się teraz?',
+    signingOut: 'Wylogowywanie...',
+    subtitle:
+      'Sprawdź szczegóły bieżącej sesji i zarządzaj dostępem na tym urządzeniu.',
+    title: 'Konto',
+    userIdLabel: 'Identyfikator użytkownika',
+  },
   auth: {
     emailLabel: 'E-mail',
     errors: {

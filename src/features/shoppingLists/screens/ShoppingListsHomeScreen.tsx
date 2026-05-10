@@ -50,9 +50,12 @@ function formatDate(date: string, language: string) {
 }
 
 export function ShoppingListsHomeScreen({ navigation }: Props) {
-  const { session, signOut } = useSession();
+  const { session } = useSession();
   const { i18n, t } = useTranslation();
   const queryClient = useQueryClient();
+  const [createDraft, setCreateDraft] = useState('');
+  const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
+  const [isCreateDialogVisible, setCreateDialogVisible] = useState(false);
   const [deletingList, setDeletingList] = useState<ShoppingListSummary | null>(
     null,
   );
@@ -112,6 +115,11 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           return sortShoppingLists([newList, ...existingLists]);
         },
       );
+      closeCreateDialog(true);
+      Alert.alert(
+        t('common.feedback.successTitle'),
+        t('common.feedback.listCreated'),
+      );
     },
   });
 
@@ -147,7 +155,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           );
         },
       );
-      closeRenameDialog();
+      closeRenameDialog(true);
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listRenamed'),
@@ -208,16 +216,25 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     return shoppingListsQuery.error.message;
   }, [shoppingListsQuery.error]);
 
-  async function handleCreateList(newName: string = '') {
-    const trimmedName = newName.trim();
-
-    if (!trimmedName) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('validation.requiredListName'),
-      );
+  function closeCreateDialog(force = false) {
+    if (!force && createListMutation.isPending) {
       return;
     }
+
+    setCreateDialogVisible(false);
+    setCreateDraft('');
+    setCreateErrorKey(null);
+  }
+
+  async function handleCreateList() {
+    const trimmedName = createDraft.trim();
+
+    if (!trimmedName) {
+      setCreateErrorKey('validation.requiredListName');
+      return;
+    }
+
+    setCreateErrorKey(null);
 
     try {
       await createListMutation.mutateAsync(trimmedName);
@@ -230,22 +247,9 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   }
 
   function startCreateList() {
-    Alert.prompt(
-      t('shoppingLists.createTitle'),
-      '',
-      [
-        {
-          text: t('common.actions.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.actions.confirm'),
-          onPress: (text?: string) => handleCreateList(text),
-        },
-      ],
-      'plain-text',
-      '',
-    );
+    setCreateDraft('');
+    setCreateErrorKey(null);
+    setCreateDialogVisible(true);
   }
 
   function closeDeleteDialog() {
@@ -256,8 +260,8 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     setDeletingList(null);
   }
 
-  function closeRenameDialog() {
-    if (renameListMutation.isPending) {
+  function closeRenameDialog(force = false) {
+    if (!force && renameListMutation.isPending) {
       return;
     }
 
@@ -303,18 +307,18 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     navigation.setOptions({
       headerRight: () => (
         <Pressable
-          onPress={() => void signOut()}
+          onPress={() => navigation.navigate('AccountManagement')}
           style={({ pressed }) => [
             styles.iconButton,
             pressed ? styles.actionPressed : null,
           ]}
-          accessibilityLabel={t('shoppingLists.signOutAction')}
+          accessibilityLabel={t('account.openAction')}
         >
-          <Feather name="log-out" size={20} color="#374151" />
+          <Feather name="user" size={20} color="#374151" />
         </Pressable>
       ),
     });
-  }, [navigation, signOut, t]);
+  }, [navigation, t]);
 
   if (shoppingListsQuery.isPending) {
     return (
@@ -348,12 +352,26 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
           )
         }
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <Pressable
+            onPress={() =>
+              navigation.navigate('ShoppingListDetail', {
+                listId: item.id,
+                listName: item.name,
+              })
+            }
+            style={({ pressed }) => [
+              styles.card,
+              pressed ? styles.actionPressed : null,
+            ]}
+          >
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{item.name}</Text>
               <View style={styles.cardActions}>
                 <Pressable
-                  onPress={() => startRename(item)}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    startRename(item);
+                  }}
                   style={({ pressed }) => [
                     styles.iconButton,
                     pressed ? styles.actionPressed : null,
@@ -363,7 +381,10 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
                   <Feather name="edit-2" size={20} color="#374151" />
                 </Pressable>
                 <Pressable
-                  onPress={() => confirmDeleteList(item)}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    confirmDeleteList(item);
+                  }}
                   style={({ pressed }) => [
                     styles.iconButton,
                     pressed ? styles.actionPressed : null,
@@ -385,23 +406,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
                 total: item.itemCount,
               })}
             </Text>
-            <Pressable
-              onPress={() =>
-                navigation.navigate('ShoppingListDetail', {
-                  listId: item.id,
-                  listName: item.name,
-                })
-              }
-              style={({ pressed }) => [
-                styles.linkButton,
-                pressed ? styles.actionPressed : null,
-              ]}
-            >
-              <Text style={styles.linkButtonText}>
-                {t('shoppingLists.openAction')}
-              </Text>
-            </Pressable>
-          </View>
+          </Pressable>
         )}
       />
       <Pressable
@@ -414,6 +419,40 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       >
         <Feather name="plus" size={24} color="#ffffff" />
       </Pressable>
+      <AppDialog
+        actions={
+          <>
+            <AppButton
+              disabled={createListMutation.isPending}
+              onPress={closeCreateDialog}
+              variant="secondary"
+            >
+              {t('common.actions.cancel')}
+            </AppButton>
+            <AppButton
+              disabled={createListMutation.isPending}
+              onPress={() => void handleCreateList()}
+            >
+              {createListMutation.isPending
+                ? t('shoppingLists.creating')
+                : t('common.actions.confirm')}
+            </AppButton>
+          </>
+        }
+        onRequestClose={closeCreateDialog}
+        title={t('shoppingLists.createTitle')}
+        visible={isCreateDialogVisible}
+      >
+        <AppTextInput
+          label={t('shoppingLists.createTitle')}
+          onChangeText={setCreateDraft}
+          placeholder={t('shoppingLists.namePlaceholder')}
+          value={createDraft}
+        />
+        {createErrorKey ? (
+          <Text style={styles.error}>{t(createErrorKey)}</Text>
+        ) : null}
+      </AppDialog>
       <AppDialog
         actions={
           <>
@@ -576,15 +615,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 12,
-  },
-  linkButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  linkButtonText: {
-    color: '#2563eb',
-    fontSize: 14,
-    fontWeight: '600',
   },
   primaryAction: {
     backgroundColor: '#111827',

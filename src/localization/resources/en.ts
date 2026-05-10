@@ -1,4 +1,21 @@
 export const en = {
+  account: {
+    emailLabel: 'Email',
+    openAction: 'Open account management',
+    profileSettings: 'Profile settings',
+    sessionHint:
+      'Sign out on this device if you want to protect your shopping data.',
+    sessionTitle: 'Session',
+    signOutAction: 'Sign out',
+    signOutMessage:
+      'You will need to sign in again to access your private shopping lists.',
+    signOutTitle: 'Sign out now?',
+    signingOut: 'Signing out...',
+    subtitle:
+      'Review your current session details and manage access to this device.',
+    title: 'Account',
+    userIdLabel: 'User ID',
+  },
   auth: {
     emailLabel: 'Email',
     errors: {
