@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { getSupabaseClient } from '../../services/supabase/client';
 
@@ -19,6 +20,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [configErrorKey, setConfigErrorKey] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState<SessionStatus>('loading');
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const { client, error } = getSupabaseClient();
@@ -49,6 +52,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
         return;
       }
 
+      if (!nextSession) {
+        queryClient.clear();
+      }
+
       setSession(nextSession);
       setStatus(nextSession ? 'signedIn' : 'signedOut');
     });
@@ -57,7 +64,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const value = useMemo<SessionContextValue>(
     () => ({
