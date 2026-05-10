@@ -64,6 +64,8 @@ export const en = {
       'Add your first item to start tracking shopping progress.',
     emptyTitle: 'No items yet',
     loading: 'Loading items in this list...',
+    markCompletedAction: 'Mark complete',
+    markPendingAction: 'Mark pending',
     nameLabel: 'Item name',
     namePlaceholder: 'Milk',
     pendingLabel: 'Pending',

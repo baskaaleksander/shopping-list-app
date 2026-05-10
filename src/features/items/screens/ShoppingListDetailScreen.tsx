@@ -139,6 +139,72 @@ export function ShoppingListDetailScreen({ route }: Props) {
     },
   });
 
+  const toggleItemMutation = useMutation({
+    mutationFn: async ({
+      completed,
+      itemId,
+    }: {
+      completed: boolean;
+      itemId: string;
+    }) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await updateShoppingItem(itemId, user.id, { completed });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onMutate: async ({ completed, itemId }) => {
+      const queryKey = [
+        'shopping-list-items',
+        user?.id,
+        route.params.listId,
+      ] as const;
+
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousItems =
+        queryClient.getQueryData<typeof itemsQuery.data>(queryKey);
+
+      queryClient.setQueryData(
+        queryKey,
+        (currentItems: typeof itemsQuery.data) => {
+          const existingItems = currentItems ?? [];
+
+          return existingItems.map((item) =>
+            item.id === itemId ? { ...item, completed } : item,
+          );
+        },
+      );
+
+      return { previousItems, queryKey };
+    },
+    onError: (_error, _variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      queryClient.setQueryData(context.queryKey, context.previousItems);
+    },
+    onSuccess: (updatedItem) => {
+      queryClient.setQueryData(
+        ['shopping-list-items', user?.id, route.params.listId],
+        (currentItems: typeof itemsQuery.data) => {
+          const existingItems = currentItems ?? [];
+
+          return existingItems.map((item) =>
+            item.id === updatedItem.id ? updatedItem : item,
+          );
+        },
+      );
+    },
+  });
+
   if (itemsQuery.isLoading) {
     return (
       <Screen centered>
@@ -230,6 +296,13 @@ export function ShoppingListDetailScreen({ route }: Props) {
         error instanceof Error ? error.message : 'common.errors.saveFailed',
       );
     }
+  }
+
+  function toggleItemCompletion(itemId: string, completed: boolean) {
+    void toggleItemMutation.mutateAsync({
+      completed,
+      itemId,
+    });
   }
 
   return (
@@ -363,6 +436,32 @@ export function ShoppingListDetailScreen({ route }: Props) {
                     ? t('items.completedLabel')
                     : t('items.pendingLabel')}
                 </Text>
+                <View style={styles.actionRow}>
+                  <Pressable
+                    onPress={() =>
+                      toggleItemCompletion(item.id, !item.completed)
+                    }
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      item.completed
+                        ? styles.secondaryAction
+                        : styles.primaryAction,
+                      pressed ? styles.actionPressed : null,
+                    ]}
+                  >
+                    <Text
+                      style={
+                        item.completed
+                          ? styles.secondaryActionText
+                          : styles.primaryActionText
+                      }
+                    >
+                      {item.completed
+                        ? t('items.markPendingAction')
+                        : t('items.markCompletedAction')}
+                    </Text>
+                  </Pressable>
+                </View>
                 <Pressable
                   onPress={() =>
                     startEditingItem(item.id, item.name, item.quantity)

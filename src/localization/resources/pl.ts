@@ -65,6 +65,8 @@ export const pl = {
       'Dodaj pierwszy produkt, aby zacząć śledzić postęp zakupów.',
     emptyTitle: 'Brak produktów',
     loading: 'Wczytywanie produktów z tej listy...',
+    markCompletedAction: 'Oznacz jako kupione',
+    markPendingAction: 'Przywróć do kupienia',
     nameLabel: 'Nazwa produktu',
     namePlaceholder: 'Mleko',
     pendingLabel: 'Do kupienia',

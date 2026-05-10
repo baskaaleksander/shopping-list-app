@@ -81,7 +81,7 @@ export async function createShoppingItem(
 export async function updateShoppingItem(
   itemId: string,
   userId: string,
-  input: Pick<ShoppingItemUpdate, 'name' | 'quantity'>,
+  input: Pick<ShoppingItemUpdate, 'completed' | 'name' | 'quantity'>,
 ): Promise<ItemResult<ShoppingItem>> {
   const { client, error } = getSupabaseClient();
 
