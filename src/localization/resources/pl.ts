@@ -109,6 +109,7 @@ export const pl = {
   },
   shoppingLists: {
     actionCannotBeUndone: 'Tej akcji nie można cofnąć.',
+    completedLabel: 'Ukończono',
     confirmDeleteMessage:
       'Usunąć „{{name}}”? Wszystkie produkty z tej listy również zostaną usunięte.',
     confirmDeleteTitle: 'Usunąć tę listę zakupów?',
@@ -124,6 +125,7 @@ export const pl = {
     loading: 'Wczytywanie list zakupów...',
     noEmail: 'Brak adresu e-mail zalogowanego użytkownika',
     openAction: 'Otwórz listę',
+    pendingLabel: 'Do zrobienia',
     progressLabel: 'Postęp',
     progressValue: '{{completed}}/{{total}} ukończono',
     renamePlaceholder: 'Zaktualizowana nazwa listy zakupów',

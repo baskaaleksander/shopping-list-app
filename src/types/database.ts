@@ -65,6 +65,7 @@ export type AppDatabase = {
       };
       shopping_lists: {
         Insert: {
+          completed?: boolean;
           created_at?: string;
           id?: string;
           name: string;
@@ -72,6 +73,7 @@ export type AppDatabase = {
           user_id: string;
         };
         Row: {
+          completed: boolean;
           created_at: string;
           id: string;
           name: string;
@@ -79,6 +81,7 @@ export type AppDatabase = {
           user_id: string;
         };
         Update: {
+          completed?: boolean;
           created_at?: string;
           id?: string;
           name?: string;

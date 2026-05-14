@@ -108,6 +108,7 @@ export const en = {
   },
   shoppingLists: {
     actionCannotBeUndone: 'This action cannot be undone.',
+    completedLabel: 'Completed',
     confirmDeleteMessage:
       'Delete "{{name}}"? All items in this list will be removed as well.',
     confirmDeleteTitle: 'Delete this shopping list?',
@@ -124,6 +125,7 @@ export const en = {
     loading: 'Loading your shopping lists...',
     noEmail: 'Signed-in email unavailable',
     openAction: 'Open list',
+    pendingLabel: 'Pending',
     progressLabel: 'Progress',
     progressValue: '{{completed}}/{{total}} completed',
     renamePlaceholder: 'Updated shopping list name',

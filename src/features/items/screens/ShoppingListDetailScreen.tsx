@@ -4,6 +4,7 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -221,7 +222,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
       queryClient.setQueryData(context.queryKey, context.previousItems);
       Alert.alert(
         t('common.feedback.errorTitle'),
-        t('common.errors.deleteFailed'),
+        t('common.errors.saveFailed'),
       );
     },
     onSuccess: (updatedItem) => {
@@ -520,39 +521,24 @@ export function ShoppingListDetailScreen({ route }: Props) {
                 </Pressable>
               </View>
             </View>
-            <Text
-              style={[
-                styles.status,
-                item.completed ? styles.completedStatus : null,
-              ]}
-            >
-              {item.completed
-                ? t('items.completedLabel')
-                : t('items.pendingLabel')}
-            </Text>
-            <View style={styles.actionRow}>
-              <Pressable
-                onPress={() => toggleItemCompletion(item.id, !item.completed)}
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  item.completed
-                    ? styles.secondaryAction
-                    : styles.primaryAction,
-                  pressed ? styles.actionPressed : null,
+            <View style={styles.switchRow}>
+              <Text
+                style={[
+                  styles.status,
+                  item.completed ? styles.completedStatus : null,
                 ]}
               >
-                <Text
-                  style={
-                    item.completed
-                      ? styles.secondaryActionText
-                      : styles.primaryActionText
-                  }
-                >
-                  {item.completed
-                    ? t('items.markPendingAction')
-                    : t('items.markCompletedAction')}
-                </Text>
-              </Pressable>
+                {item.completed
+                  ? t('items.completedLabel')
+                  : t('items.pendingLabel')}
+              </Text>
+              <Switch
+                ios_backgroundColor="#d1d5db"
+                onValueChange={(value) => toggleItemCompletion(item.id, value)}
+                trackColor={{ false: '#d1d5db', true: '#86efac' }}
+                thumbColor={item.completed ? '#166534' : '#f9fafb'}
+                value={item.completed}
+              />
             </View>
           </View>
         )}
@@ -776,42 +762,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
-  actionButton: {
-    alignItems: 'center',
-    borderRadius: 12,
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
   actionPressed: {
     opacity: 0.85,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  primaryAction: {
-    backgroundColor: '#111827',
-  },
-  primaryActionText: {
-    color: '#f9fafb',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  secondaryAction: {
-    backgroundColor: '#e5e7eb',
-  },
-  secondaryActionText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '600',
   },
   status: {
     color: '#1f2937',
     fontSize: 14,
     lineHeight: 20,
+  },
+  switchRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   summaryCard: {
     backgroundColor: '#111827',

@@ -4,6 +4,7 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -27,6 +28,7 @@ import {
   deleteShoppingList,
   fetchShoppingLists,
   renameShoppingList,
+  updateShoppingListCompletion,
 } from '../api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ShoppingListsHome'>;
@@ -159,6 +161,89 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       Alert.alert(
         t('common.feedback.successTitle'),
         t('common.feedback.listRenamed'),
+      );
+    },
+  });
+
+  const toggleListMutation = useMutation({
+    mutationFn: async ({
+      completed,
+      listId,
+    }: {
+      completed: boolean;
+      listId: string;
+    }) => {
+      if (!user?.id) {
+        throw new Error('common.errors.saveFailed');
+      }
+
+      const result = await updateShoppingListCompletion(listId, user.id, {
+        completed,
+      });
+
+      if (result.errorKey || !result.data) {
+        throw new Error(result.errorKey ?? 'common.errors.saveFailed');
+      }
+
+      return result.data;
+    },
+    onMutate: async ({ completed, listId }) => {
+      const queryKey = ['shopping-lists', user?.id] as const;
+
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousLists =
+        queryClient.getQueryData<typeof shoppingListsQuery.data>(queryKey);
+
+      queryClient.setQueryData(
+        queryKey,
+        (currentLists: typeof shoppingListsQuery.data) => {
+          const existingLists = currentLists ?? [];
+
+          return sortShoppingLists(
+            existingLists.map((list) =>
+              list.id === listId
+                ? {
+                    ...list,
+                    completed,
+                    updated_at: new Date().toISOString(),
+                  }
+                : list,
+            ),
+          );
+        },
+      );
+
+      return { previousLists, queryKey };
+    },
+    onError: (_error, _variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      queryClient.setQueryData(context.queryKey, context.previousLists);
+      Alert.alert(
+        t('common.feedback.errorTitle'),
+        t('common.errors.saveFailed'),
+      );
+    },
+    onSuccess: (updatedList) => {
+      queryClient.setQueryData(
+        ['shopping-lists', user?.id],
+        (currentLists: typeof shoppingListsQuery.data) => {
+          const existingLists = currentLists ?? [];
+
+          return sortShoppingLists(
+            existingLists.map((list) =>
+              list.id === updatedList.id
+                ? {
+                    ...list,
+                    ...updatedList,
+                  }
+                : list,
+            ),
+          );
+        },
       );
     },
   });
@@ -303,6 +388,13 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     setDeletingList(list);
   }
 
+  function toggleListCompletion(listId: string, completed: boolean) {
+    void toggleListMutation.mutateAsync({
+      completed,
+      listId,
+    });
+  }
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -361,11 +453,19 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
             }
             style={({ pressed }) => [
               styles.card,
+              item.completed ? styles.completedCard : null,
               pressed ? styles.actionPressed : null,
             ]}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  item.completed ? styles.completedTitle : null,
+                ]}
+              >
+                {item.name}
+              </Text>
               <View style={styles.cardActions}>
                 <Pressable
                   onPress={(event) => {
@@ -406,6 +506,28 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
                 total: item.itemCount,
               })}
             </Text>
+            <View
+              onStartShouldSetResponder={() => true}
+              style={styles.switchRow}
+            >
+              <Text
+                style={[
+                  styles.cardMeta,
+                  item.completed ? styles.completedStatus : null,
+                ]}
+              >
+                {item.completed
+                  ? t('shoppingLists.completedLabel')
+                  : t('shoppingLists.pendingLabel')}
+              </Text>
+              <Switch
+                ios_backgroundColor="#d1d5db"
+                onValueChange={(value) => toggleListCompletion(item.id, value)}
+                trackColor={{ false: '#d1d5db', true: '#86efac' }}
+                thumbColor={item.completed ? '#166534' : '#f9fafb'}
+                value={item.completed}
+              />
+            </View>
           </Pressable>
         )}
       />
@@ -557,6 +679,10 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 16,
   },
+  completedCard: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#86efac',
+  },
   cardMeta: {
     color: '#6b7280',
     fontSize: 14,
@@ -577,6 +703,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
     marginRight: 8,
+  },
+  completedStatus: {
+    color: '#166534',
+    fontWeight: '600',
+  },
+  completedTitle: {
+    color: '#4b5563',
+    textDecorationLine: 'line-through',
   },
   iconButton: {
     padding: 4,
@@ -615,6 +749,12 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 12,
+  },
+  switchRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
   primaryAction: {
     backgroundColor: '#111827',

@@ -46,7 +46,9 @@ export async function fetchShoppingLists(
 
   const { data, error: queryError } = await client
     .from('shopping_lists')
-    .select('id, user_id, name, created_at, updated_at, items(id, completed)')
+    .select(
+      'id, user_id, name, completed, created_at, updated_at, items(id, completed)',
+    )
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 
@@ -80,7 +82,7 @@ export async function createShoppingList(
   const { data, error: insertError } = await client
     .from('shopping_lists')
     .insert([input])
-    .select('id, user_id, name, created_at, updated_at')
+    .select('id, user_id, name, completed, created_at, updated_at')
     .single();
 
   if (insertError || !data) {
@@ -119,7 +121,42 @@ export async function renameShoppingList(
     .update(input)
     .eq('id', listId)
     .eq('user_id', userId)
-    .select('id, user_id, name, created_at, updated_at')
+    .select('id, user_id, name, completed, created_at, updated_at')
+    .single();
+
+  if (updateError || !data) {
+    return {
+      data: null,
+      errorKey: 'common.errors.saveFailed',
+    };
+  }
+
+  return {
+    data,
+    errorKey: null,
+  };
+}
+
+export async function updateShoppingListCompletion(
+  listId: string,
+  userId: string,
+  input: Pick<ShoppingListUpdate, 'completed'>,
+): Promise<ShoppingListResult<ShoppingList>> {
+  const { client, error } = getSupabaseClient();
+
+  if (!client) {
+    return {
+      data: null,
+      errorKey: error,
+    };
+  }
+
+  const { data, error: updateError } = await client
+    .from('shopping_lists')
+    .update(input)
+    .eq('id', listId)
+    .eq('user_id', userId)
+    .select('id, user_id, name, completed, created_at, updated_at')
     .single();
 
   if (updateError || !data) {
