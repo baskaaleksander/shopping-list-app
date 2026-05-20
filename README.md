@@ -1,4 +1,5 @@
 # Dokumentacja projektu Shopping List App
+
 Aleksander Baska, Łukasz Bączkiewicz
 
 ## 1. Krotki opis projektu
@@ -26,57 +27,57 @@ Projekt skupia sie na prostocie obslugi, czytelnym interfejsie oraz bezpiecznym 
 
 Ponizej wskazano wymagania funkcjonalne zgodne z kryterium minimum pieciu wymagan. Wszystkie wymienione wymagania maja odzwierciedlenie w aktualnej implementacji.
 
-| ID | Wymaganie funkcjonalne | Status realizacji | Dowod w projekcie |
-| --- | --- | --- | --- |
-| F1 | Uzytkownik moze zalozyc konto, zalogowac sie i wylogowac. | Zrealizowane | `src/features/auth/screens/SignUpScreen.tsx`, `src/features/auth/screens/SignInScreen.tsx`, `src/features/auth/api.ts`, `src/features/account/screens/AccountManagementScreen.tsx` |
-| F2 | Uzytkownik ma dostep tylko do swoich danych po uwierzytelnieniu. | Zrealizowane | `src/app/navigation/AppNavigation.tsx`, `src/app/providers/SessionProvider.tsx`, `supabase/migrations/20260509190000_enable_rls_policies.sql` |
-| F3 | Uzytkownik moze tworzyc, przegladac, zmieniac nazwe i usuwac listy zakupow. | Zrealizowane | `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx`, `src/features/shoppingLists/api.ts` |
-| F4 | Uzytkownik moze otworzyc liste i dodawac, edytowac oraz usuwac produkty. | Zrealizowane | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/items/api.ts` |
-| F5 | Uzytkownik moze oznaczac produkty jako kupione i sledzic postep listy. | Zrealizowane | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx` |
-| F6 | Aplikacja automatycznie przywraca sesje po ponownym uruchomieniu. | Zrealizowane | `src/app/providers/SessionProvider.tsx`, `src/services/supabase/client.ts` |
-| F7 | Interfejs aplikacji obsluguje dwa jezyki: polski i angielski. | Zrealizowane | `src/localization/i18n.ts`, `src/localization/resources/en.ts`, `src/localization/resources/pl.ts` |
+| ID  | Wymaganie funkcjonalne                                                      | Status realizacji | Dowod w projekcie                                                                                                                                                                  |
+| --- | --------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | Uzytkownik moze zalozyc konto, zalogowac sie i wylogowac.                   | Zrealizowane      | `src/features/auth/screens/SignUpScreen.tsx`, `src/features/auth/screens/SignInScreen.tsx`, `src/features/auth/api.ts`, `src/features/account/screens/AccountManagementScreen.tsx` |
+| F2  | Uzytkownik ma dostep tylko do swoich danych po uwierzytelnieniu.            | Zrealizowane      | `src/app/navigation/AppNavigation.tsx`, `src/app/providers/SessionProvider.tsx`, `supabase/migrations/20260509190000_enable_rls_policies.sql`                                      |
+| F3  | Uzytkownik moze tworzyc, przegladac, zmieniac nazwe i usuwac listy zakupow. | Zrealizowane      | `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx`, `src/features/shoppingLists/api.ts`                                                                              |
+| F4  | Uzytkownik moze otworzyc liste i dodawac, edytowac oraz usuwac produkty.    | Zrealizowane      | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/items/api.ts`                                                                                             |
+| F5  | Uzytkownik moze oznaczac produkty jako kupione i sledzic postep listy.      | Zrealizowane      | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx`                                                        |
+| F6  | Aplikacja automatycznie przywraca sesje po ponownym uruchomieniu.           | Zrealizowane      | `src/app/providers/SessionProvider.tsx`, `src/services/supabase/client.ts`                                                                                                         |
+| F7  | Interfejs aplikacji obsluguje dwa jezyki: polski i angielski.               | Zrealizowane      | `src/localization/i18n.ts`, `src/localization/resources/en.ts`, `src/localization/resources/pl.ts`                                                                                 |
 
 ### 3.4 Wymagania pozafunkcjonalne
 
-| ID | Wymaganie pozafunkcjonalne | Sposob realizacji |
-| --- | --- | --- |
-| N1 | Bezpieczenstwo danych uzytkownika | Supabase Auth, prywatne dane powiazane z `user_id`, RLS dla `profiles`, `shopping_lists` i `items` |
-| N2 | Czytelnosc i prostota obslugi na urzadzeniu mobilnym | Prosty uklad ekranow, duze przyciski, dialogi potwierdzenia, czytelne komunikaty, komponenty wspolne |
-| N3 | Niezawodnosc podstawowych operacji | Walidacja formularzy, obsluga bledow sieci, komunikaty o sukcesie i bledach, testy automatyczne |
-| N4 | Przenoszalnosc i utrzymywalnosc kodu | TypeScript, modularna architektura feature-based, ESLint, Prettier, React Query, oddzielenie logiki dostepu do danych od widoku |
+| ID  | Wymaganie pozafunkcjonalne                           | Sposob realizacji                                                                                                               |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| N1  | Bezpieczenstwo danych uzytkownika                    | Supabase Auth, prywatne dane powiazane z `user_id`, RLS dla `profiles`, `shopping_lists` i `items`                              |
+| N2  | Czytelnosc i prostota obslugi na urzadzeniu mobilnym | Prosty uklad ekranow, duze przyciski, dialogi potwierdzenia, czytelne komunikaty, komponenty wspolne                            |
+| N3  | Niezawodnosc podstawowych operacji                   | Walidacja formularzy, obsluga bledow sieci, komunikaty o sukcesie i bledach, testy automatyczne                                 |
+| N4  | Przenoszalnosc i utrzymywalnosc kodu                 | TypeScript, modularna architektura feature-based, ESLint, Prettier, React Query, oddzielenie logiki dostepu do danych od widoku |
 
 ## 4. Technologia i architektura rozwiazania
 
 ### 4.1 Stos technologiczny
 
-| Obszar | Technologia |
-| --- | --- |
-| Frontend mobilny | React Native + Expo |
-| Jezyk | TypeScript |
-| Nawigacja | React Navigation |
-| Zarzadzanie danymi asynchronicznymi | TanStack React Query |
-| Backend i baza danych | Self-hosted Supabase |
-| Uwierzytelnianie | Supabase Auth |
-| Lokalizacja | i18next + react-i18next + expo-localization |
-| Testy | Jest + `@testing-library/react-native` |
-| Jakosc kodu | ESLint + Prettier |
+| Obszar                              | Technologia                                 |
+| ----------------------------------- | ------------------------------------------- |
+| Frontend mobilny                    | React Native + Expo                         |
+| Jezyk                               | TypeScript                                  |
+| Nawigacja                           | React Navigation                            |
+| Zarzadzanie danymi asynchronicznymi | TanStack React Query                        |
+| Backend i baza danych               | Self-hosted Supabase                        |
+| Uwierzytelnianie                    | Supabase Auth                               |
+| Lokalizacja                         | i18next + react-i18next + expo-localization |
+| Testy                               | Jest + `@testing-library/react-native`      |
+| Jakosc kodu                         | ESLint + Prettier                           |
 
 ### 4.2 Architektura projektu
 
 Projekt jest zorganizowany modulowo.
 
-| Katalog | Rola |
-| --- | --- |
-| `src/app` | start aplikacji, providery, nawigacja |
-| `src/features/auth` | logowanie, rejestracja, walidacja i API uwierzytelniania |
-| `src/features/shoppingLists` | ekran list zakupow, operacje CRUD na listach |
-| `src/features/items` | ekran szczegolow listy i operacje na produktach |
-| `src/features/account` | ekran zarzadzania kontem i wylogowanie |
-| `src/components` | wspolne komponenty UI |
-| `src/localization` | konfiguracja jezykow i tlumaczenia |
-| `src/services/supabase` | konfiguracja klienta Supabase |
-| `supabase/migrations` | definicja bazy danych i polityk bezpieczenstwa |
-| `__tests__` | testy automatyczne |
+| Katalog                      | Rola                                                     |
+| ---------------------------- | -------------------------------------------------------- |
+| `src/app`                    | start aplikacji, providery, nawigacja                    |
+| `src/features/auth`          | logowanie, rejestracja, walidacja i API uwierzytelniania |
+| `src/features/shoppingLists` | ekran list zakupow, operacje CRUD na listach             |
+| `src/features/items`         | ekran szczegolow listy i operacje na produktach          |
+| `src/features/account`       | ekran zarzadzania kontem i wylogowanie                   |
+| `src/components`             | wspolne komponenty UI                                    |
+| `src/localization`           | konfiguracja jezykow i tlumaczenia                       |
+| `src/services/supabase`      | konfiguracja klienta Supabase                            |
+| `supabase/migrations`        | definicja bazy danych i polityk bezpieczenstwa           |
+| `__tests__`                  | testy automatyczne                                       |
 
 ### 4.3 Przeplyw danych
 
@@ -90,15 +91,15 @@ Projekt jest zorganizowany modulowo.
 
 ### 5.1 Zgodnosc realizacji z wymaganiami funkcjonalnymi
 
-| Wymaganie | Sposob realizacji w aplikacji |
-| --- | --- |
-| Rejestracja i logowanie | Ekrany `SignUpScreen` i `SignInScreen` obsluguja formularze, walidacje oraz wywolania Supabase Auth. |
-| Ochrona danych i dostep po zalogowaniu | Nawigacja jest warunkowa: niezalogowany uzytkownik widzi tylko auth flow, a zalogowany widzi liste zakupow i szczegoly. |
-| Zarzadzanie listami zakupow | Na ekranie glownym mozna tworzyc listy, zmieniac ich nazwy, usuwac je i otwierac szczegoly listy. |
-| Zarzadzanie produktami | Na ekranie szczegolow listy mozna dodac produkt, zmienic jego nazwe i ilosc, usunac go oraz oznaczyc jako kupiony. |
-| Sledzenie postepu | Ekran list pokazuje podsumowanie `ukonczone/wszystkie`, a ekran szczegolow pokazuje liczbe kupionych produktow w wybranej liscie. |
-| Trwalosc danych | Dane sa zapisywane w Supabase, a sesja jest przechowywana lokalnie przez `AsyncStorage`. |
-| Lokalizacja | Interfejs jest przygotowany w jezyku polskim i angielskim, a wybor jezyka nastepuje na podstawie ustawien urzadzenia. |
+| Wymaganie                              | Sposob realizacji w aplikacji                                                                                                     |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Rejestracja i logowanie                | Ekrany `SignUpScreen` i `SignInScreen` obsluguja formularze, walidacje oraz wywolania Supabase Auth.                              |
+| Ochrona danych i dostep po zalogowaniu | Nawigacja jest warunkowa: niezalogowany uzytkownik widzi tylko auth flow, a zalogowany widzi liste zakupow i szczegoly.           |
+| Zarzadzanie listami zakupow            | Na ekranie glownym mozna tworzyc listy, zmieniac ich nazwy, usuwac je i otwierac szczegoly listy.                                 |
+| Zarzadzanie produktami                 | Na ekranie szczegolow listy mozna dodac produkt, zmienic jego nazwe i ilosc, usunac go oraz oznaczyc jako kupiony.                |
+| Sledzenie postepu                      | Ekran list pokazuje podsumowanie `ukonczone/wszystkie`, a ekran szczegolow pokazuje liczbe kupionych produktow w wybranej liscie. |
+| Trwalosc danych                        | Dane sa zapisywane w Supabase, a sesja jest przechowywana lokalnie przez `AsyncStorage`.                                          |
+| Lokalizacja                            | Interfejs jest przygotowany w jezyku polskim i angielskim, a wybor jezyka nastepuje na podstawie ustawien urzadzenia.             |
 
 ### 5.2 Funkcje dodatkowe ponad absolutne minimum
 
@@ -111,23 +112,23 @@ Projekt jest zorganizowany modulowo.
 
 ### 6.1 Glowne ekrany interfejsu
 
-| Ekran | Przeznaczenie |
-| --- | --- |
-| `SignInScreen` | logowanie do aplikacji |
-| `SignUpScreen` | rejestracja nowego uzytkownika |
-| `ShoppingListsHomeScreen` | przeglad wszystkich list zakupow, tworzenie, zmiana nazwy, usuwanie i oznaczanie stanu list |
-| `ShoppingListDetailScreen` | przeglad produktow jednej listy, dodawanie, edycja, usuwanie i zmiana statusu produktu |
-| `AccountManagementScreen` | podglad informacji o koncie i wylogowanie |
+| Ekran                      | Przeznaczenie                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| `SignInScreen`             | logowanie do aplikacji                                                                      |
+| `SignUpScreen`             | rejestracja nowego uzytkownika                                                              |
+| `ShoppingListsHomeScreen`  | przeglad wszystkich list zakupow, tworzenie, zmiana nazwy, usuwanie i oznaczanie stanu list |
+| `ShoppingListDetailScreen` | przeglad produktow jednej listy, dodawanie, edycja, usuwanie i zmiana statusu produktu      |
+| `AccountManagementScreen`  | podglad informacji o koncie i wylogowanie                                                   |
 
 ### 6.2 Zgodnosc warstwy klienckiej z wymaganiami
 
-| Wymaganie widoku | Realizacja |
-| --- | --- |
-| Formularz logowania i rejestracji | Osobne ekrany z polami `email`, `username`, `password`, przyciskami akcji i komunikatami walidacyjnymi |
-| Widok pustego stanu | `EmptyState` informuje o braku list lub braku produktow |
-| Czytelne akcje CRUD | Ikony edycji i usuwania, przycisk FAB do dodawania, modalne dialogi potwierdzenia |
-| Widoczne rozroznienie stanu wykonania | Produkty i listy zakonczone maja zmieniona stylistyke, a status jest kontrolowany przez `Switch` |
-| Prezentacja postepu | Widok list pokazuje stan `ukonczone/wszystkie`, a ekran szczegolow ma karte podsumowujaca postep |
+| Wymaganie widoku                      | Realizacja                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Formularz logowania i rejestracji     | Osobne ekrany z polami `email`, `username`, `password`, przyciskami akcji i komunikatami walidacyjnymi |
+| Widok pustego stanu                   | `EmptyState` informuje o braku list lub braku produktow                                                |
+| Czytelne akcje CRUD                   | Ikony edycji i usuwania, przycisk FAB do dodawania, modalne dialogi potwierdzenia                      |
+| Widoczne rozroznienie stanu wykonania | Produkty i listy zakonczone maja zmieniona stylistyke, a status jest kontrolowany przez `Switch`       |
+| Prezentacja postepu                   | Widok list pokazuje stan `ukonczone/wszystkie`, a ekran szczegolow ma karte podsumowujaca postep       |
 
 ### 6.3 Separacja logiki od widoku
 
@@ -145,11 +146,11 @@ Jednoczesnie ekrany nadal zawieraja czesc logiki sterujacej formularzem i dialog
 
 ### 7.1 Tabele
 
-| Tabela | Przeznaczenie | Najwazniejsze pola |
-| --- | --- | --- |
-| `profiles` | profil uzytkownika | `id`, `username`, `created_at`, `updated_at` |
-| `shopping_lists` | listy zakupow nalezace do uzytkownika | `id`, `user_id`, `name`, `completed`, `created_at`, `updated_at` |
-| `items` | produkty przypisane do konkretnej listy | `id`, `user_id`, `list_id`, `name`, `quantity`, `completed`, `created_at`, `updated_at` |
+| Tabela           | Przeznaczenie                           | Najwazniejsze pola                                                                      |
+| ---------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `profiles`       | profil uzytkownika                      | `id`, `username`, `created_at`, `updated_at`                                            |
+| `shopping_lists` | listy zakupow nalezace do uzytkownika   | `id`, `user_id`, `name`, `completed`, `created_at`, `updated_at`                        |
+| `items`          | produkty przypisane do konkretnej listy | `id`, `user_id`, `list_id`, `name`, `quantity`, `completed`, `created_at`, `updated_at` |
 
 ### 7.2 Relacje
 
@@ -206,12 +207,12 @@ Na aktualnym stanie projektu wykonano:
 
 ### 9.1 Zakres testow automatycznych
 
-| Plik testowy | Zakres |
-| --- | --- |
-| `__tests__/App.test.tsx` | podstawowe uruchomienie powloki aplikacji |
-| `__tests__/auth-validation.test.ts` | walidacja logowania i rejestracji |
-| `__tests__/domain-validation.test.ts` | walidacja nazw list i produktow |
-| `__tests__/localization.test.ts` | wybor jezyka i fallback tlumaczen |
+| Plik testowy                          | Zakres                                    |
+| ------------------------------------- | ----------------------------------------- |
+| `__tests__/App.test.tsx`              | podstawowe uruchomienie powloki aplikacji |
+| `__tests__/auth-validation.test.ts`   | walidacja logowania i rejestracji         |
+| `__tests__/domain-validation.test.ts` | walidacja nazw list i produktow           |
+| `__tests__/localization.test.ts`      | wybor jezyka i fallback tlumaczen         |
 
 ### 9.2 Testy manualne
 
@@ -246,29 +247,61 @@ Seed tworzy profil, 100 list zakupow i 20 produktow na kazda liste.
 ### 10.3 Demonstracja ekranów
 
 1. Ekran logowania
+
+   <img src="assets/showcase/1.png" alt="Ekran logowania" width="260" />
+
 2. Ekran rejestracji
+
+   <img src="assets/showcase/2.png" alt="Ekran rejestracji" width="260" />
+
 3. Główny ekran aplikacji z listą wszystkich list
+
+   <img src="assets/showcase/3.png" alt="Główny ekran aplikacji z listą wszystkich list" width="260" />
+
 4. Dialog edycji listy
+
+   <img src="assets/showcase/4.png" alt="Dialog edycji listy" width="260" />
+
 5. Dialog usuwania listy
+
+   <img src="assets/showcase/5.png" alt="Dialog usuwania listy" width="260" />
+
 6. Dialog dodawania listy
+
+   <img src="assets/showcase/6.png" alt="Dialog dodawania listy" width="260" />
+
 7. Ekran szczegółowy listy
-8. Dialog edycji elementu listy
-9. Dialog usuwania elementu listy
-10. Dialog tworzenia elementu listy
+
+   <img src="assets/showcase/7.png" alt="Ekran szczegółowy listy" width="260" />
+
+8. Dialog dodawania elementu listy
+
+   <img src="assets/showcase/8.png" alt="Dialog edycji elementu listy" width="260" />
+
+9. Dialog edycji elementu listy
+
+   <img src="assets/showcase/9.png" alt="Dialog usuwania elementu listy" width="260" />
+
+10. Dialog usuwania elementu listy
+
+    <img src="assets/showcase/10.png" alt="Dialog tworzenia elementu listy" width="260" />
+
 11. Ekran szczegółów konta użytkownika
+
+    <img src="assets/showcase/11.png" alt="Ekran szczegółów konta użytkownika" width="260" />
 
 ### 10.4 Elementy kodu warte uwagi
 
-| Obszar | Pliki |
-| --- | --- |
-| Start aplikacji i providerzy | `src/app/App.tsx`, `src/app/providers/SessionProvider.tsx`, `src/app/providers/QueryProvider.tsx` |
-| Nawigacja i ochrona widokow | `src/app/navigation/AppNavigation.tsx` |
-| Uwierzytelnianie | `src/features/auth/screens/*`, `src/features/auth/api.ts`, `src/features/auth/validation.ts` |
-| Listy zakupow | `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx`, `src/features/shoppingLists/api.ts` |
-| Produkty | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/items/api.ts` |
-| Komponenty wspolne | `src/components/*` |
-| Lokalizacja | `src/localization/i18n.ts`, `src/localization/resources/en.ts`, `src/localization/resources/pl.ts` |
-| Baza danych i bezpieczenstwo | `supabase/migrations/*`, `src/types/database.ts` |
+| Obszar                       | Pliki                                                                                                 |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Start aplikacji i providerzy | `src/app/App.tsx`, `src/app/providers/SessionProvider.tsx`, `src/app/providers/QueryProvider.tsx`     |
+| Nawigacja i ochrona widokow  | `src/app/navigation/AppNavigation.tsx`                                                                |
+| Uwierzytelnianie             | `src/features/auth/screens/*`, `src/features/auth/api.ts`, `src/features/auth/validation.ts`          |
+| Listy zakupow                | `src/features/shoppingLists/screens/ShoppingListsHomeScreen.tsx`, `src/features/shoppingLists/api.ts` |
+| Produkty                     | `src/features/items/screens/ShoppingListDetailScreen.tsx`, `src/features/items/api.ts`                |
+| Komponenty wspolne           | `src/components/*`                                                                                    |
+| Lokalizacja                  | `src/localization/i18n.ts`, `src/localization/resources/en.ts`, `src/localization/resources/pl.ts`    |
+| Baza danych i bezpieczenstwo | `supabase/migrations/*`, `src/types/database.ts`                                                      |
 
 ## 11. Podsumowanie
 
