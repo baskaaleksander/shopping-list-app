@@ -305,4 +305,4 @@ Seed tworzy profil, 100 list zakupow i 20 produktow na kazda liste.
 
 ## 11. Podsumowanie
 
-Projekt `Shopping List App` realizuje glowny cel aplikacji do prowadzenia prywatnych list zakupow w wersji edukacyjnej, ale jednoczesnie technicznie spojnej. Zawiera komplet kluczowych funkcji uzytkowych, bezpieczny model dostepu do danych, dwujezyczny interfejs, testy oraz czytelna organizacje kodu. Z perspektywy kryteriow oceny projekt ma dobrze udokumentowana specyfikacje, wyraznie zaimplementowana warstwe funkcjonalna i widoku oraz material, ktory nadaje sie do demonstracji lub przegladu kodu.
+Projekt `Shopping List App` realizuje glowny cel aplikacji do prowadzenia prywatnych list zakupow w wersji edukacyjnej, ale jednoczesnie technicznie spojnej. Zawiera komplet kluczowych funkcji uzytkowych, bezpieczny model dostepu do danych, dwujezyczny interfejs, testy oraz czytelna organizacje kodu.
