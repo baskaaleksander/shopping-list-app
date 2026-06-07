@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -20,6 +19,7 @@ import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
+import { useToast } from '../../../app/providers/ToastProvider';
 import type { RootStackParamList, SessionUser } from '../../../types';
 import type { ShoppingListSummary } from '../api';
 
@@ -55,6 +55,7 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
   const { session } = useSession();
   const { i18n, t } = useTranslation();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [createDraft, setCreateDraft] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
   const [isCreateDialogVisible, setCreateDialogVisible] = useState(false);
@@ -118,10 +119,10 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         },
       );
       closeCreateDialog(true);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.listCreated'),
-      );
+      showToast({
+        message: t('common.feedback.listCreated'),
+        title: t('common.feedback.successTitle'),
+      });
     },
   });
 
@@ -158,10 +159,10 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         },
       );
       closeRenameDialog(true);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.listRenamed'),
-      );
+      showToast({
+        message: t('common.feedback.listRenamed'),
+        title: t('common.feedback.successTitle'),
+      });
     },
   });
 
@@ -222,10 +223,11 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
       }
 
       queryClient.setQueryData(context.queryKey, context.previousLists);
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.saveFailed'),
-      );
+      showToast({
+        message: t('common.errors.saveFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     },
     onSuccess: (updatedList) => {
       queryClient.setQueryData(
@@ -270,28 +272,30 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         },
       );
       setDeletingList(null);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.listDeleted'),
-      );
+      showToast({
+        message: t('common.feedback.listDeleted'),
+        title: t('common.feedback.successTitle'),
+      });
     },
     onError: () => {
       setDeletingList(null);
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.deleteFailed'),
-      );
+      showToast({
+        message: t('common.errors.deleteFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     },
   });
 
   useEffect(() => {
     if (shoppingListsQuery.error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.loadFailed'),
-      );
+      showToast({
+        message: t('common.errors.loadFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
-  }, [shoppingListsQuery.error, t]);
+  }, [shoppingListsQuery.error, showToast, t]);
 
   const queryErrorKey = useMemo(() => {
     if (!(shoppingListsQuery.error instanceof Error)) {
@@ -324,10 +328,13 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
     try {
       await createListMutation.mutateAsync(trimmedName);
     } catch (error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
-      );
+      showToast({
+        message: t(
+          error instanceof Error ? error.message : 'common.errors.saveFailed',
+        ),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
   }
 
@@ -371,10 +378,13 @@ export function ShoppingListsHomeScreen({ navigation }: Props) {
         name: trimmedName,
       });
     } catch (error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
-      );
+      showToast({
+        message: t(
+          error instanceof Error ? error.message : 'common.errors.saveFailed',
+        ),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
   }
 

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useSession } from '../../../app/providers/SessionProvider';
+import { useToast } from '../../../app/providers/ToastProvider';
 import { AppButton } from '../../../components/AppButton';
 import { AppDialog } from '../../../components/AppDialog';
 import { Screen } from '../../../components/Screen';
@@ -10,6 +11,7 @@ import { Screen } from '../../../components/Screen';
 export function AccountManagementScreen() {
   const { session, signOut } = useSession();
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [isSignOutDialogVisible, setSignOutDialogVisible] = useState(false);
   const [isSigningOut, setSigningOut] = useState(false);
 
@@ -31,10 +33,11 @@ export function AccountManagementScreen() {
       await signOut();
       setSignOutDialogVisible(false);
     } catch {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.saveFailed'),
-      );
+      showToast({
+        message: t('common.errors.saveFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     } finally {
       setSigningOut(false);
     }

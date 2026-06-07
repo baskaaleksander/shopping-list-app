@@ -7,6 +7,7 @@ import '../localization/i18n';
 import { AppNavigation } from './navigation/AppNavigation';
 import { QueryProvider } from './providers/QueryProvider';
 import { SessionProvider } from './providers/SessionProvider';
+import { ToastProvider } from './providers/ToastProvider';
 
 export default function App() {
   return (
@@ -14,8 +15,10 @@ export default function App() {
       <SafeAreaProvider>
         <QueryProvider>
           <SessionProvider>
-            <StatusBar style="auto" />
-            <AppNavigation />
+            <ToastProvider>
+              <StatusBar style="auto" />
+              <AppNavigation />
+            </ToastProvider>
           </SessionProvider>
         </QueryProvider>
       </SafeAreaProvider>

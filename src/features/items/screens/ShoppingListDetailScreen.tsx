@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -20,6 +19,7 @@ import { AppTextInput } from '../../../components/AppTextInput';
 import { EmptyState } from '../../../components/EmptyState';
 import { Screen } from '../../../components/Screen';
 import { useSession } from '../../../app/providers/SessionProvider';
+import { useToast } from '../../../app/providers/ToastProvider';
 import type { RootStackParamList, SessionUser } from '../../../types';
 
 import {
@@ -35,6 +35,7 @@ export function ShoppingListDetailScreen({ route }: Props) {
   const { session } = useSession();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [draftName, setDraftName] = useState('');
   const [draftQuantity, setDraftQuantity] = useState('');
   const [createErrorKey, setCreateErrorKey] = useState<string | null>(null);
@@ -112,10 +113,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
       setDraftQuantity('');
       setCreateErrorKey(null);
       setCreateDialogVisible(false);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.itemAdded'),
-      );
+      showToast({
+        message: t('common.feedback.itemAdded'),
+        title: t('common.feedback.successTitle'),
+      });
       void queryClient.invalidateQueries({
         queryKey: ['shopping-lists', user?.id],
       });
@@ -159,10 +160,10 @@ export function ShoppingListDetailScreen({ route }: Props) {
         },
       );
       closeEditItemDialog(true);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.itemUpdated'),
-      );
+      showToast({
+        message: t('common.feedback.itemUpdated'),
+        title: t('common.feedback.successTitle'),
+      });
       void queryClient.invalidateQueries({
         queryKey: ['shopping-lists', user?.id],
       });
@@ -220,10 +221,11 @@ export function ShoppingListDetailScreen({ route }: Props) {
       }
 
       queryClient.setQueryData(context.queryKey, context.previousItems);
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.saveFailed'),
-      );
+      showToast({
+        message: t('common.errors.saveFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     },
     onSuccess: (updatedItem) => {
       queryClient.setQueryData(
@@ -284,17 +286,18 @@ export function ShoppingListDetailScreen({ route }: Props) {
 
       queryClient.setQueryData(context.queryKey, context.previousItems);
       setDeletingItem(null);
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.deleteFailed'),
-      );
+      showToast({
+        message: t('common.errors.deleteFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     },
     onSuccess: () => {
       setDeletingItem(null);
-      Alert.alert(
-        t('common.feedback.successTitle'),
-        t('common.feedback.itemDeleted'),
-      );
+      showToast({
+        message: t('common.feedback.itemDeleted'),
+        title: t('common.feedback.successTitle'),
+      });
       void queryClient.invalidateQueries({
         queryKey: ['shopping-lists', user?.id],
       });
@@ -303,12 +306,13 @@ export function ShoppingListDetailScreen({ route }: Props) {
 
   useEffect(() => {
     if (itemsQuery.error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t('common.errors.loadFailed'),
-      );
+      showToast({
+        message: t('common.errors.loadFailed'),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
-  }, [itemsQuery.error, t]);
+  }, [itemsQuery.error, showToast, t]);
 
   if (itemsQuery.isPending) {
     return (
@@ -388,10 +392,13 @@ export function ShoppingListDetailScreen({ route }: Props) {
         quantity: parsedQuantity,
       });
     } catch (error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
-      );
+      showToast({
+        message: t(
+          error instanceof Error ? error.message : 'common.errors.saveFailed',
+        ),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
   }
 
@@ -425,10 +432,13 @@ export function ShoppingListDetailScreen({ route }: Props) {
         quantity: parsedQuantity,
       });
     } catch (error) {
-      Alert.alert(
-        t('common.feedback.errorTitle'),
-        t(error instanceof Error ? error.message : 'common.errors.saveFailed'),
-      );
+      showToast({
+        message: t(
+          error instanceof Error ? error.message : 'common.errors.saveFailed',
+        ),
+        title: t('common.feedback.errorTitle'),
+        variant: 'error',
+      });
     }
   }
 
