@@ -1,6 +1,11 @@
 export const pl = {
   account: {
     emailLabel: 'E-mail',
+    languageChanged: 'Język został zmieniony.',
+    languageHint: 'Wybierz język, którego aplikacja ma używać na tym urządzeniu.',
+    languageOptionEnglish: 'English',
+    languageOptionPolish: 'Polski',
+    languageTitle: 'Język',
     openAction: 'Otwórz zarządzanie kontem',
     profileSettings: 'Ustawienia profilu',
     sessionHint:
@@ -105,6 +110,7 @@ export const pl = {
     accountManagementTitle: 'Zarządzanie kontem',
   },
   shell: {
+    loadingPreferences: 'Wczytywanie preferencji aplikacji...',
     loadingSession: 'Sprawdzanie lokalnej sesji Supabase...',
   },
   shoppingLists: {

@@ -1,6 +1,18 @@
-import { pickAppLanguage, i18n } from '../src/localization/i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {
+  getStoredAppLanguage,
+  i18n,
+  isAppLanguage,
+  pickAppLanguage,
+  persistAppLanguage,
+} from '../src/localization/i18n';
 
 describe('Localization', () => {
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+  });
+
   describe('pickAppLanguage', () => {
     it('prefers Polish device locales', () => {
       expect(
@@ -12,6 +24,27 @@ describe('Localization', () => {
       expect(
         pickAppLanguage([{ languageCode: 'de', languageTag: 'de-DE' }]),
       ).toBe('en');
+    });
+  });
+
+  describe('stored language preference', () => {
+    it('recognizes supported app languages', () => {
+      expect(isAppLanguage('en')).toBe(true);
+      expect(isAppLanguage('pl')).toBe(true);
+      expect(isAppLanguage('de')).toBe(false);
+      expect(isAppLanguage(null)).toBe(false);
+    });
+
+    it('persists and restores the selected app language', async () => {
+      await persistAppLanguage('pl');
+
+      await expect(getStoredAppLanguage()).resolves.toBe('pl');
+    });
+
+    it('ignores unsupported stored values', async () => {
+      await AsyncStorage.setItem('shopping-list-app.language', 'de');
+
+      await expect(getStoredAppLanguage()).resolves.toBeNull();
     });
   });
 

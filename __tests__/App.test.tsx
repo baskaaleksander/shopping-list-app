@@ -4,10 +4,10 @@ import App from '../App';
 import { en } from '../src/localization/resources/en';
 
 describe('App', () => {
-  it('renders the bootstrap navigation shell', () => {
+  it('renders the bootstrap navigation shell', async () => {
     render(<App />);
 
-    expect(screen.getByText(en.auth.guestHint)).toBeTruthy();
+    expect(await screen.findByText(en.auth.guestHint)).toBeTruthy();
     expect(screen.getAllByText(en.auth.signInAction).length).toBeGreaterThan(0);
   });
 });

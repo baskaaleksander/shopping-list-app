@@ -11,6 +11,7 @@ import {
 import {
   Animated,
   Easing,
+  PanResponder,
   StyleSheet,
   Text,
   View,
@@ -36,6 +37,7 @@ type ToastContextValue = {
 };
 
 const TOAST_DURATION_MS = 2800;
+const TOAST_DISMISS_DRAG_DISTANCE = 48;
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
@@ -43,9 +45,20 @@ export function ToastProvider({ children }: PropsWithChildren) {
   const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastState | null>(null);
   const animation = useRef(new Animated.Value(0)).current;
+  const dragY = useRef(new Animated.Value(0)).current;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDraggingRef = useRef(false);
+
+  const clearToastTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   const hideToast = useCallback(() => {
+    clearToastTimer();
+    isDraggingRef.current = false;
     Animated.timing(animation, {
       duration: 180,
       easing: Easing.in(Easing.ease),
@@ -53,29 +66,60 @@ export function ToastProvider({ children }: PropsWithChildren) {
       useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished) {
-        timeoutRef.current = null;
+        dragY.setValue(0);
         setToast(null);
       }
     });
-  }, [animation]);
+  }, [animation, clearToastTimer, dragY]);
+
+  const scheduleToastHide = useCallback(
+    (durationMs: number) => {
+      clearToastTimer();
+      timeoutRef.current = setTimeout(() => {
+        if (!isDraggingRef.current) {
+          hideToast();
+        }
+      }, durationMs);
+    },
+    [clearToastTimer, hideToast],
+  );
+
+  const dismissToastByDrag = useCallback(() => {
+    clearToastTimer();
+    isDraggingRef.current = false;
+    Animated.parallel([
+      Animated.timing(animation, {
+        duration: 150,
+        easing: Easing.in(Easing.ease),
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(dragY, {
+        duration: 150,
+        easing: Easing.in(Easing.ease),
+        toValue: -96,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        dragY.setValue(0);
+        setToast(null);
+      }
+    });
+  }, [animation, clearToastTimer, dragY]);
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      clearToastTimer();
     };
-  }, []);
+  }, [clearToastTimer]);
 
   useEffect(() => {
     if (!toast) {
       return;
     }
 
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
+    dragY.setValue(0);
     Animated.timing(animation, {
       duration: 220,
       easing: Easing.out(Easing.ease),
@@ -83,10 +127,8 @@ export function ToastProvider({ children }: PropsWithChildren) {
       useNativeDriver: true,
     }).start();
 
-    timeoutRef.current = setTimeout(() => {
-      hideToast();
-    }, toast.durationMs);
-  }, [animation, hideToast, toast]);
+    scheduleToastHide(toast.durationMs);
+  }, [animation, dragY, scheduleToastHide, toast]);
 
   const showToast = useCallback(
     ({
@@ -96,11 +138,14 @@ export function ToastProvider({ children }: PropsWithChildren) {
       variant = 'success',
     }: ToastOptions) => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        clearToastTimer();
       }
 
+      isDraggingRef.current = false;
       animation.stopAnimation();
+      dragY.stopAnimation();
       animation.setValue(0);
+      dragY.setValue(0);
 
       setToast({
         durationMs,
@@ -109,7 +154,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
         variant,
       });
     },
-    [animation],
+    [animation, clearToastTimer, dragY],
   );
 
   const contextValue = useMemo(
@@ -124,10 +169,75 @@ export function ToastProvider({ children }: PropsWithChildren) {
     outputRange: [-32, 0],
   });
 
+  const combinedTranslateY = Animated.add(toastTranslateY, dragY);
   const toastOpacity = animation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
   });
+  const dragDismissOpacity = dragY.interpolate({
+    inputRange: [-96, 0],
+    outputRange: [0.65, 1],
+    extrapolate: 'clamp',
+  });
+  const combinedOpacity = Animated.multiply(toastOpacity, dragDismissOpacity);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gestureState) =>
+          Boolean(
+            toast?.variant === 'success' &&
+              Math.abs(gestureState.dy) > 6 &&
+              Math.abs(gestureState.dy) > Math.abs(gestureState.dx) &&
+              gestureState.dy < 0,
+          ),
+        onPanResponderGrant: () => {
+          isDraggingRef.current = true;
+          clearToastTimer();
+        },
+        onPanResponderMove: (_event, gestureState) => {
+          dragY.setValue(Math.min(0, gestureState.dy));
+        },
+        onPanResponderRelease: (_event, gestureState) => {
+          isDraggingRef.current = false;
+
+          if (
+            gestureState.dy <= -TOAST_DISMISS_DRAG_DISTANCE ||
+            gestureState.vy <= -0.75
+          ) {
+            dismissToastByDrag();
+            return;
+          }
+
+          Animated.spring(dragY, {
+            damping: 18,
+            mass: 0.7,
+            stiffness: 220,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+
+          if (toast) {
+            scheduleToastHide(toast.durationMs);
+          }
+        },
+        onPanResponderTerminate: () => {
+          isDraggingRef.current = false;
+          Animated.spring(dragY, {
+            damping: 18,
+            mass: 0.7,
+            stiffness: 220,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+
+          if (toast) {
+            scheduleToastHide(toast.durationMs);
+          }
+        },
+      }),
+    [clearToastTimer, dismissToastByDrag, dragY, scheduleToastHide, toast],
+  );
 
   return (
     <ToastContext.Provider value={contextValue}>
@@ -137,7 +247,8 @@ export function ToastProvider({ children }: PropsWithChildren) {
           <Animated.View
             accessibilityLiveRegion="polite"
             accessibilityRole="alert"
-            pointerEvents="none"
+            pointerEvents={toast.variant === 'success' ? 'auto' : 'none'}
+            {...(toast.variant === 'success' ? panResponder.panHandlers : {})}
             style={[
               styles.toast,
               toast.variant === 'success'
@@ -145,8 +256,8 @@ export function ToastProvider({ children }: PropsWithChildren) {
                 : styles.errorToast,
               {
                 marginTop: insets.top + 8,
-                opacity: toastOpacity,
-                transform: [{ translateY: toastTranslateY }],
+                opacity: combinedOpacity,
+                transform: [{ translateY: combinedTranslateY }],
               },
             ]}
           >
